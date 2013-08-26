@@ -19,7 +19,12 @@ if ( !isset( $config['thebrig']['rootfolder']) || !is_dir( $config['thebrig']['r
 if (isset($_GET['name']) && ! isset($_GET['act'])) {
 	$jailnameexec=$_GET['name'];
 	$jailnamecmd=$_GET['action'];
-	mwexec("/etc/rc.d/jail {$jailnamecmd} {$jailnameexec}");
+	cmd_exec("/etc/rc.d/jail {$jailnamecmd} {$jailnameexec}",$a_tolog, $a_tolog1);
+	$filelog = $config['thebrig']['rootfolder']."thebrig.log";
+	$handle1 = fopen($filelog, "a+");
+	foreach ($a_tolog1 as $tolog1 ) { fwrite ($handle1, "[".date("Y/m/d H:i:s")."]: TheBrig error!: ".trim($tolog1)."\n" ); }
+	fclose ($handle1);
+	
 }
 
 // sent to page data from config.xml
