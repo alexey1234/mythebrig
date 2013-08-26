@@ -219,5 +219,5 @@ pip-log.txt
 *
 !conf
 !conf/*
-!conf/bin
-
+!conf/bin/
+!conf/bin/*
