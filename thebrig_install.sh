@@ -31,22 +31,12 @@ else
     FULL_PATH=$(echo $STAT | sed -r s/'^([^\/]+)\/'/'\/'/1 2>/dev/null)
     BRIG_ROOT=$(dirname $FULL_PATH | sed 's|/thebrig_install.sh||')
 fi
-# touch /tmp/thebrig.tmp
 
-# This is the script to initially install thebrig
-# It first fetches the zip of the most recent version from github
-# and then extracts it.
 
-if [ $2 -eq 2 ]; then 
-    # Fetch the testing branch as a zip file
-    echo "Retrieving the testing branch as a zip file"
-    fetch https://github.com/fsbruva/thebrig/archive/testing.zip || exerr "ERROR: Could not write to install directory!"
-    mv testing.zip master.zip
-else
-    # Fetch the master branch as a zip file
-    echo "Retrieving the most recent version of TheBrig"
-    fetch https://github.com/fsbruva/thebrig/archive/master.zip || exerr "ERROR: Could not write to install directory!"
-fi
+# Fetch the master branch as a zip file
+echo "Retrieving the most recent version of TheBrig"
+https://github.com/alexey1234/mythebrig/archive/master.zip || exerr "ERROR: Could not write to install directory!"
+
 
 # Extract the files we want, stripping the leading directory, and exclude
 # the git nonsense
