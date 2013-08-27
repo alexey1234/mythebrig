@@ -71,7 +71,7 @@ m1000:	file_put_contents ("ftpservers", $ftp_servers[$ftp_n] );
 		$read = array( $pipes[1] ) ;    // renames the pipe
 		$write = null ;
 		$except = null ;
-		$readTimeout = 7 ;
+		$readTimeout = 4 ;
 		
 		//  If the connection cannot be established, then $ftp_proc will be false, and not a resource
 		//  However, this check is mostly uneeded, even if the ftp binary doesn't exist.
@@ -162,8 +162,12 @@ unlink ("/tmp/ftpsen");
 			$input_errors[] = "not a resource!";
 		}
 	} // end of if for the user pressed "query"
-	
-
+	$a_tolog1 = file($config['thebrig']['rootfolder'] . "thebrigerror.txt");
+	$filelog = $config['thebrig']['rootfolder']."thebrig.log";
+	$handle1 = fopen($filelog, "a+");
+	foreach ($a_tolog1 as $tolog1 ) { fwrite ($handle1, "[".date("Y/m/d H:i:s")."]: TheBrig error!: ".trim($tolog1)."\n" ); }
+	fclose ($handle1);
+unlink ($config['thebrig']['rootfolder'] . "thebrigerror.txt");
 	// There are no input errors detected, so we can attempt the actual work 
 	if ( !$input_errors )
 	{
