@@ -216,8 +216,5 @@ pip-log.txt
 #################
 ## mythebrig
 #################
-*
-!conf
-!conf/*
 !conf/bin/
 !conf/bin/*
