@@ -8,7 +8,7 @@ require_once("ext/thebrig/lang.inc");
 require_once("ext/thebrig/functions.inc");
 // I'm sorry, but I want next line commented.  I create page trap.php for trap _POST _GET messages, for testing my code.  
 //  include_once ("ext/thebrig/trap.php");
-
+if (is_file("/tmp/tempjail")){unlink ("/tmp/tempjail");}
 //I check install.
 if ( !isset( $config['thebrig']['rootfolder']) || !is_dir( $config['thebrig']['rootfolder']."work" )) {
 	$input_errors[] = _THEBRIG_NOT_CONFIRMED;
@@ -73,8 +73,8 @@ if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_jail, "uuid"))
 	$pconfig['devfs_enable'] = isset($a_jail[$cnid]['devfs_enable']);
 	$pconfig['proc_enable'] = isset($a_jail[$cnid]['proc_enable']);
 	$pconfig['fdescfs_enable'] = isset($a_jail[$cnid]['fdescfs_enable']);
-	$pconfig['devfsrules'] = $a_jail[$cnid]['devfsrules'];
-	$pconfig['auxparam'] = "";
+	// $pconfig['devfsrules'] = $a_jail[$cnid]['devfsrules'];
+	unset ($pconfig['auxparam']);
 	if (isset($a_jail[$cnid]['auxparam']) && is_array($a_jail[$cnid]['auxparam']))
 		$pconfig['auxparam'] = implode("\n", $a_jail[$cnid]['auxparam']);
 	$pconfig['exec_start'] = $a_jail[$cnid]['exec_start'];
@@ -122,8 +122,8 @@ else {
 	$pconfig['devfs_enable'] = true;
 	$pconfig['proc_enable'] = false;
 	$pconfig['fdescfs_enable'] = false;
-	$pconfig['devfsrules'] = "";
-	$pconfig['auxparam'] = "";
+	// unset ($pconfig['devfsrules'] );
+	unset($pconfig['auxparam']);
 	$pconfig['exec_start'] = "";
 	$pconfig['afterstart0'] = "";
 	$pconfig['afterstart1'] = "";
@@ -140,7 +140,7 @@ else {
 	$pconfig['attach_blocking'] = "";
 	$pconfig['force_blocking'] = "";
 	$pconfig['zfs_datasets'] = "";
-	$pconfig['fib'] = "";
+	$pconfig['fib'] = false;
 	$path_ro = false;
 	$name_ro = false;
 }
@@ -315,7 +315,7 @@ if ($_POST) {
 		$jail['ipaddr'] = $pconfig['ipaddr'];
 		$jail['subnet'] = $pconfig['subnet'];
 		$jail['jailpath'] = $pconfig['jailpath'];
-		$jail['devfsrules'] = $pconfig['dst'];
+		//$jail['devfsrules'] = $pconfig['dst'];
 		$jail['jail_mount'] = isset($pconfig['jail_mount']) ? true : false;
 		$jail['devfs_enable'] = isset($pconfig['devfs_enable']) ? true : false;
 		$jail['proc_enable'] = isset($pconfig['proc_enable']) ? true : false;
@@ -434,7 +434,10 @@ function source_change() {
 			break;
 	}
 }
+function redirect() {
+	window.location = "extensions_thebrig_fstab.php?uuid=<?=$pconfig['uuid'];?>&act=editor"
 
+}
 // -->
 </script>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
@@ -474,14 +477,14 @@ function source_change() {
 			<?php html_checkbox("enable", gettext("Jail start on boot"),			!empty($pconfig['enable']) ? true : false, gettext("Enable"), "");?>
 			<?php html_inputbox("jailpath", gettext("Jail Location"), $pconfig['jailpath'], gettext("Sets an alternate location for the jail. Default is {$config['thebrig']['rootfolder']}{jail_name}/."), false, 40,isset($uuid) && (FALSE !== $cnid) && $path_ro);?>
 			<?php html_separator();?>
-			<?php html_titleline(gettext("Mount"));?>
+			<?php html_titleline(gettext("Mounts"));?>
  			<?php html_checkbox("jail_mount", gettext("mount/umount jail's fs"), !empty($pconfig['jail_mount']) ? true : false, gettext("Enable the jail to automount its fstab file. <b>This is not optional for thin jails.</b> ")," " ," ", "event.preventDefault()");?>
 			<?php html_checkbox("devfs_enable", gettext("Enable mount devfs"), !empty($pconfig['devfs_enable']) ? true : false, gettext("Use to mount the device file system inside the jail. <br><b>This must be checked if you want 'ps', 'top' or most rc.d scripts to function inside jail.</b>"), "", false);?>
-			<?php //html_inputbox("devfsrules", gettext("Devfs ruleset name"), !empty($pconfig['devfsrules']) ? $pconfig['devfsrules'] : "devfsrules_jail", gettext("You can change standart ruleset"), false, 30);?>
+			<?php /*html_inputbox("devfsrules", gettext("Devfs ruleset name"), !empty($pconfig['devfsrules']) ? $pconfig['devfsrules'] : "devfsrules_jail", gettext("You can change standart ruleset"), false, 30);*/?>
 			<?php html_checkbox("proc_enable", gettext("Enable mount procfs"), !empty($pconfig['proc_enable']) ? true : false, "", "", false);?>
 			<?php html_checkbox("fdescfs_enable", gettext("Enable mount fdescfs"), !empty($pconfig['fdescfs_enable']) ? true : false, "", "", false);?>
-			<?php html_textarea("auxparam", gettext("Fstab"), $pconfig['auxparam'] , sprintf(gettext(" This will be added to fstab.  Format: device &lt;space&gt; mount-point as full path &lt;space&gt; fstype &lt;space&gt; options &lt;space&gt; dumpfreq &lt;space&gt; passno. If no need fstab - delete default line.  <a href=http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/mount-unmount.html target=\"_blank\">Manual</a> ")), false, 65, 5, false, false);?>
-			<?php html_separator();?>
+			<!---<?php html_textarea("auxparam", gettext("Fstab"), $pconfig['auxparam'] , sprintf(gettext(" This will be added to fstab.  Format: device &lt;space&gt; mount-point as full path &lt;space&gt; fstype &lt;space&gt; options &lt;space&gt; dumpfreq &lt;space&gt; passno. If no need fstab - delete default line.  <a href=http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/mount-unmount.html target=\"_blank\">Manual</a> ")), false, 65, 5, false, false);?>
+		-->	<?php html_separator();?>
 			<?php html_titleline(gettext("Commands"));?>
 			<?php html_inputbox("exec_start", gettext("Jail start command"), $pconfig['exec_start'], gettext("command to execute  for starting the jail."), false, 50);?>
 			<?php html_inputbox("afterstart0", gettext("User command 0"), $pconfig['afterstart0'], gettext("command to execute after the one for starting the jail."), false, 50);?>
@@ -516,9 +519,12 @@ function source_change() {
 				<div id="submit">
 					<input name="Submit" type="submit" class="formbtn" value="<?=(isset($uuid) && (FALSE !== $cnid)) ? gettext("Save") : gettext("Add")?>" />
 					<input name="Cancel" type="submit" class="formbtn" value="<?=gettext("Cancel");?>" />
+					<input type="button" style = "font-family:Tahoma,Verdana,Arial,Helvetica,sans-serif;font-size: 11px;font-weight:bold;" onclick="redirect()" value="Fstab editor">
 					<input name="uuid" type="hidden" value="<?=$pconfig['uuid'];?>" />
 					<input name="type" type="hidden" value="<?=$pconfig['type'];?>" />
 				</div>
+				
+				
 				<?php include("formend.inc");?>
 			</form>
 		</td>
