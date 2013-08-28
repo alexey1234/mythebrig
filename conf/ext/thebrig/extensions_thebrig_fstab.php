@@ -1,4 +1,7 @@
 <?php
+/*
+     extensions_thebrig_fstab.php   Autor Alexey Kruglov 2013
+*/
 require("auth.inc");
 require("guiconfig.inc");
 ob_start();
@@ -12,7 +15,7 @@ if ($_GET) {
 	$a_jail = &$config['thebrig']['content'];
 	if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_jail, "uuid")))) {
 	$tmpfile = "/tmp/tempjail";
-    $handle = fopen($tmpfile,"w");
+    $handle = fopen($tmpfile,"wb");
 	fwrite ($handle, "uuid:".$a_jail[$cnid]['uuid']."\n"); //0
 	if(isset($a_jail[$cnid]['enable'])) {fwrite ($handle, "enable:yes\n");} else { fwrite ($handle, "enable:no\n" );}
 	fwrite ($handle, "jailno:".$a_jail[$cnid]['jailno']."\n");
@@ -46,8 +49,6 @@ if ($_GET) {
 	fwrite ($handle, "zfs_datasets:".$a_jail[$cnid]['zfs_datasets']."\n");
 	if(isset($a_jail[$cnid]['fib'])) {fwrite ($handle, "fib:yes\n");} else { fwrite ($handle, "fib:no\n" );}
 	if(isset($a_jail[$cnid]['ports'])) {fwrite ($handle, "ports:yes\n");} else { fwrite ($handle, "ports:no\n" );}
-	
-	
 	// By default, when editing an existing jail, path and name will be read only.
 	$path_ro = true;
 	$name_ro = true;
@@ -59,13 +60,6 @@ if ($_GET) {
 		$input_errors[] = "The specified jailname is a duplicate - probably because you imported the jail's config. Please choose another.";	
 		$name_ro = false;
 			}
-	/*
-$tmpfile = "/tmp/tempjail";
-$handle = fopen($tmpfile,"w");
-foreach ( $p_config as $lines)  {	fwrite ($handle, $lines."\n"); }
-fclose($handle);
-*/
-
 	}
 		if (isset($a_jail[$cnid]['auxparam']) && is_array($a_jail[$cnid]['auxparam'])) {
 			$fstab = $a_jail[$cnid]['auxparam'];
@@ -77,7 +71,7 @@ fclose($handle);
 					} 
 				}
 		$fstabfile= "/tmp/fstab.edit";
-		$handle1 = fopen($fstabfile, "w");
+		$handle1 = fopen($fstabfile, "wb");
 		foreach ($fstab as $fstab1) {	fwrite ($handle1, $fstab1."\n"); } 
 		fclose($handle1);
 	}
@@ -89,8 +83,8 @@ fclose($handle);
 		$k	=	$_GET['numberline'];
 		for ($j = 0; $j <= $k; $j++) { $result[$j] = $_GET['device'][$j]." ".$_GET['mountpoint'][$j]." ".$_GET['filesys'][$j]." ".$_GET['option'][$j]." ".$_GET['dump'][$j]." ".$_GET['fsck'][$j]; }
 		$fstabfile= "/tmp/fstab.edit";
-		$handle1 = fopen($fstabfile, "w");
-		foreach ($result as $fstab1) {	fwrite ($handle1, $fstab1."\n"); } 
+		$handle1 = fopen($fstabfile, "wb");
+		foreach ($result as $fstab1) {	fwrite ($handle1, trim($fstab1)."\n"); } 
 		fclose($handle1);
 	}
 	if ($_GET['act'] == "delete") {
@@ -108,10 +102,9 @@ fclose($handle);
 			}
 		unset ($result1[$line]);
 		$result = array_diff($result1, array(''));
-		$handle1 = fopen($fstabfile, "w");
+		$handle1 = fopen($fstabfile, "wb");
 		foreach ($result as $fstab1) {	fwrite ($handle1, $fstab1."\n"); } 
 		fclose($handle1);
-		
 	}
 }
 //============================this is post============================
@@ -119,7 +112,6 @@ if(isset($_POST["Cancel"])) { ob_start();
 	$link = $_POST['referer'];
 	print_r ($_POST);
 	 header("Location: ".$link);
-	 
 	}
 if(isset($_POST['Submit'])) {
 	$link = $_POST['referer'];
@@ -136,7 +128,6 @@ if(isset($_POST['Submit'])) {
 	$frombackup=file("/tmp/tempjail");
 	$a_jail = &$config['thebrig']['content'];
 	if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_jail, "uuid")))) {
-		
 		$jail = array();
 		$a_frombackup = explode(":", $frombackup[0]);
 				$jail['uuid'] = trim ($a_frombackup[1], "\n");
@@ -212,20 +203,14 @@ if(isset($_POST['Submit'])) {
 			$a_jail[] = $jail;
 			$mode = UPDATENOTIFY_MODE_NEW;
 		}
-		
 		updatenotify_set("thebrig", $mode, $jail['uuid']);
 		write_config();
-		file_put_contents("/tmp/action", "config rewrited", FILE_APPEND);
 				}
-			
-	
-	
 	unlink ("/tmp/fstab.edit");
 	unlink ("/tmp/tempjail");
 	 header("Location: ".$link);
 
 }
-
 ?>
 <style>
 
@@ -235,7 +220,6 @@ if(isset($_POST['Submit'])) {
 </style>
 	
 <script type="text/javascript">
-
 <!--
 function cf(e,f) {
   for (var i=0; i<e.childNodes.length; i++) {
@@ -328,7 +312,7 @@ function ds(f) {
 //-->
 
 </script>
-<!---- http://www.manhunter.ru/webmaster/343_kak_otpravit_iz_formi_html_tolko_chast_dannih.html ---->
+<!----Script from this page, many thanks http://www.manhunter.ru/webmaster/343_kak_otpravit_iz_formi_html_tolko_chast_dannih.html ---->
 
 <?php $pgtitle = array("Fstab", "edit"); ?>
 <?php include ("fbegin.inc"); ?>
@@ -337,8 +321,8 @@ function ds(f) {
 <tr><td class="tabcont">
 
 <form action="extensions_thebrig_fstab.php" method="post" name="iform1" id="iform1">
-<div id="wrapper0">
-<table class="formdata" width="100%" border="0" cellpadding="5" cellspacing="0">
+	<div id="wrapper0">
+		<table class="formdata" width="100%" border="0" cellpadding="5" cellspacing="0">
 						
 							<tr><td width="5%" class="listhdrlr"><?=gettext("number");?></td>
 							<td width="25%" class="listhdrlr"><?=gettext("device");?></td>
@@ -349,15 +333,12 @@ function ds(f) {
 								<td width="5%" class="listhdrc"><?=gettext("fsck");?></td>
 								<td width="5%" class="listhdrc"></td>
 							</tr>
-							
-							
-					<?php // this line need for analystic from host
+		<?php // this line need for analystic from host
 					$fstabfile= file("/tmp/fstab.edit");
 					$countfstabfile=count($fstabfile);
-					$i = 0; met2: 
-					$fstabelement[$i] = explode(" ",$fstabfile[$i]);
-					
-					?>
+					if (($countfstabfile==1) && ( filesize("/tmp/fstab.edit") < 12)) $countfstabfile = 0;
+					for ($i = 0; $i <= $countfstabfile; $i++):
+					$fstabelement[$i] = explode(" ",$fstabfile[$i]); ?>
 					<tr><td width='5%'" class='listr'><span class='vexpl'><?php if ($i < $countfstabfile) echo (1+$i); else echo "New"; ?></span></td>
 						<td width="25%" class="listr"><input type="text"  size="60" name=<?php echo "device[".$i."]"?> id=<?php echo "device[".$i."]"?> value="<?php if (!empty($fstabelement[$i][0])) print($fstabelement[$i][0]); else print "";?>"/></td>
 						<td width="35%" class="listr" ><input type="text"  size="75" name=<?php echo "mountpoint[".$i."]" ?> id=<?php echo "mountpoint[".$i."]" ?> value="<?php if (!empty($fstabelement[$i][1])) print($fstabelement[$i][1]); else print "";?>"/></td>
@@ -366,18 +347,14 @@ function ds(f) {
 						<td width="5%" class="listr"><input type="text"  size="2" name= <?php echo "dump[".$i."]" ?> id=<?php echo "dump[".$i."]" ?> value="<?=$fstabelement[$i][4];?>"/></td>
 						<td width="5%" class="listr"><input type="text"  size="2" name= <?php echo "fsck[".$i."]" ?> id=<?php echo "fsck[".$i."]" ?> value="<?=$fstabelement[$i][5];?>"/></td>
 						<td width="5%"><a href="extensions_thebrig_fstab.php?act=delete&amp;uuid=<?=$pconfig['uuid'];?>&amp;line=<?=$i;?>&amp;referer=<?=$link;?>&amp;line=<?=$i;?>&amp;numberline=<?=$countfstabfile;?>" onclick="return confirm('<?=gettext("Do you really want to delete this line? ");?>')"><img src="x.gif" title="<?=gettext("Delete line");?>" border="0" alt="<?=gettext("Delete line");?>" /></a></td>
-						</tr>	<?php 
-								if ( $i < $countfstabfile ) {$i++; goto met2;} ?>
-													
-						</table>
-						
-		
+						</tr>	<?php endfor; ?>
+		</table>
 					<input name="act" type="hidden" value="tempedit" />
-					<input name="numberline" type="hidden" value="<?=$i;?>" />
+					<input name="numberline" type="hidden" value="<?=$countfstabfile;?>" />
 					<input name="uuid" type="hidden" value="<?=$pconfig['uuid'];?>" />
 					<input name="referer" type="hidden" value="<?=$link;?>" />	
 				 <input type="button" style = "font-family:Tahoma,Verdana,Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;color: #900;" value="Add line" onclick="ds('wrapper0');">	
-</div>
+	</div>
 			<div id="submit">
 					<input name="Submit" type="submit" class="formbtn" value="<?=gettext("Save and exit");?>" />
 					<input name="Cancel" type="submit" class="formbtn" value="<?=gettext("Cancel");?>" />
@@ -386,12 +363,9 @@ function ds(f) {
 					<input name="referer" type="hidden" value="<?=$link;?>" />
 				</div>	
 
-<?php include("formend.inc");?>
+	<?php include("formend.inc");?>
 </form>
 </td>
 </tr>
-</table>
-<?php 
-print_r ($result);
-?>				
+</table>			
 <?php include ("fend.inc"); ?>
