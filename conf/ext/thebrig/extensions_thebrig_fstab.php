@@ -7,6 +7,8 @@ require("guiconfig.inc");
 ob_start();
 $k=0;
 if ($_GET) {
+unset ($input_errors);
+print_r ($_GET);
 	if ($_GET['act'] == "editor") {
 	$link = $_SERVER['HTTP_REFERER'];
 	$uuid = $_GET['uuid'];
@@ -14,6 +16,7 @@ if ($_GET) {
 	$p_config = array();
 	$a_jail = &$config['thebrig']['content'];
 	if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_jail, "uuid")))) {
+	$p_config = $a_jail[$cnid];
 	$tmpfile = "/tmp/tempjail";
     $handle = fopen($tmpfile,"wb");
 	fwrite ($handle, "uuid:".$a_jail[$cnid]['uuid']."\n"); //0
@@ -52,15 +55,16 @@ if ($_GET) {
 	// By default, when editing an existing jail, path and name will be read only.
 	$path_ro = true;
 	$name_ro = true;
-	if ( !is_dir( $pconfig['jailpath']) ) {
+	if ( !is_dir( $p_config['jailpath']) ) {
 		$input_errors[] = "The specified jail location does not exist - probably because you imported the jail's config. Please choose another.";
 		$path_ro = false;
 	}
-	if ( (FALSE !== ( $ncid = array_search_ex($pconfig['jailname'], $a_jail, "jailname"))) && $ncid !== $cnid ){
+	if ( (FALSE !== ( $ncid = array_search_ex($p_config['jailname'], $a_jail, "jailname"))) && $ncid !== $cnid ){
 		$input_errors[] = "The specified jailname is a duplicate - probably because you imported the jail's config. Please choose another.";	
 		$name_ro = false;
 			}
 	}
+	else { $input_errors[]=" Jail not defined!  Please define jail over Add|Edit tab and push <b>Add</b> button for store configuration into config.xml "; goto menu; }
 		if (isset($a_jail[$cnid]['auxparam']) && is_array($a_jail[$cnid]['auxparam'])) {
 			$fstab = $a_jail[$cnid]['auxparam'];
 			$linenumbers = count($fstab);
@@ -211,6 +215,7 @@ if(isset($_POST['Submit'])) {
 	 header("Location: ".$link);
 
 }
+menu:
 ?>
 <style>
 
@@ -319,7 +324,7 @@ function ds(f) {
 <body>
 <table width="100%" border="0" cellpadding="0" cellspacing="0" >
 <tr><td class="tabcont">
-
+<?php if ($input_errors) print_input_errors($input_errors);?>
 <form action="extensions_thebrig_fstab.php" method="post" name="iform1" id="iform1">
 	<div id="wrapper0">
 		<table class="formdata" width="100%" border="0" cellpadding="5" cellspacing="0">
