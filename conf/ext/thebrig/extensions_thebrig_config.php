@@ -146,7 +146,7 @@ if ($_POST) {
 			$version_1 = preg_split ( "/VERSION_NBR, 'v/", $langfile[1]);
 			$config['thebrig']['version'] = substr($version_1[1],0,3);
 			write_config(); // Write the config to disk
-		
+			if (!is_dir ("{$config['thebrig']['rootfolder']}conf/ports")) mkdir ("{$config['thebrig']['rootfolder']}conf/ports",0777);
 		// Whatever we did, we did it successfully
 		$retval = 0;
 		$savemsg = get_std_save_message($retval);

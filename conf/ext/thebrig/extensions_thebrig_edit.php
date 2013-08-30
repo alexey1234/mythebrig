@@ -345,7 +345,7 @@ if ($_POST) {
 		$jail['force_blocking'] = $pconfig['force_blocking'];
 		$jail['zfs_datasets'] = $pconfig['zfs_datasets'];
 		$jail['fib'] = $pconfig['fib'];
-		$jail['ports'] = $pconfig['ports'];
+		$jail['ports'] = ( isset($pconfig['ports']) ) ? true : false ;
 		
 		// Populate the jail. The simplest case is a full jail using tarballs.
 		if ( $pconfig['source'] === "tarballs" && count ( $files_selected ) > 0 && strcmp ( $jail['type'], "full") == 0)
@@ -483,6 +483,7 @@ function redirect() {
 			<?php /*html_inputbox("devfsrules", gettext("Devfs ruleset name"), !empty($pconfig['devfsrules']) ? $pconfig['devfsrules'] : "devfsrules_jail", gettext("You can change standart ruleset"), false, 30);*/?>
 			<?php html_checkbox("proc_enable", gettext("Enable mount procfs"), !empty($pconfig['proc_enable']) ? true : false, "", "", false);?>
 			<?php html_checkbox("fdescfs_enable", gettext("Enable mount fdescfs"), !empty($pconfig['fdescfs_enable']) ? true : false, "", "", false);?>
+			<?php html_checkbox("ports", gettext("Enable mount piblic ports"), !empty($pconfig['ports']) ? true : false, "", "", false);?>
 			<!---<?php html_textarea("auxparam", gettext("Fstab"), $pconfig['auxparam'] , sprintf(gettext(" This will be added to fstab.  Format: device &lt;space&gt; mount-point as full path &lt;space&gt; fstype &lt;space&gt; options &lt;space&gt; dumpfreq &lt;space&gt; passno. If no need fstab - delete default line.  <a href=http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/mount-unmount.html target=\"_blank\">Manual</a> ")), false, 65, 5, false, false);?>
 		-->	<?php html_separator();?>
 			<?php html_titleline(gettext("Commands"));?>
