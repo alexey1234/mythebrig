@@ -53,18 +53,18 @@ $loginfo = array_merge_recursive($loginfo2,$loginfo1);
 else {$loginfo = $loginfo2;}
 
 if (isset($_POST['clear']) && $_POST['clear']) {
-	log_clear($loginfo);
-	header("Location: extensions_thebrig_log.php");
+	log_clear($loginfo[$log]);
+	header("Location: extensions_thebrig_log.php?log={$log}");
 	exit;
 }
 
 if (isset($_POST['download']) && $_POST['download']) {
-	log_download($loginfo);
+	log_download($loginfo[$log]);
 	exit;
 }
 
 if (isset($_POST['refresh']) && $_POST['refresh']) {
-	header("Location: extensions_thebrig_log.php");
+	header("Location: extensions_thebrig_log.php?log={$log}");
 	exit;
 }
 
