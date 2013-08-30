@@ -53,22 +53,6 @@ if [ "$thebrig_installed" ]; then
 	thebrigversion=`configxml_get "//thebrig/version"`
 	if [ $thebrigversion == 1 ]; then
 			echo "You have first version. It will updated.."
-			file=conf/bin/change_ver.php
-			echo "#!/usr/local/bin/php-cgi -f" > $file
-			echo "<?php" >> $file
-			echo "include (\"config.inc\");">> $file
-			echo "if ($config['thebrig']['version'] == 1) { echo \"this is first thebrig version\"; }">> $file
-			echo "else {echo \"You have new version\"; echo \"\n\"; exit;}">> $file
-			echo "\$langfile = file(\"/usr/local/www/ext/thebrig/lang.inc\");" >> $file
-			echo "\$version_1 = preg_split ( \"/VERSION_NBR, 'v/\", $langfile[1]);">> $file
-			echo "echo \"\n\";">> $file
-			echo "\$version=substr($version_1[1],0,3);">> $file
-			echo "echo \$version;">> $file
-			echo "\$config['thebrig']['version'] = \$version;">> $file
-			echo "write_config();">> $file
-			echo "echo \"\n\";">> $file
-			echo "?>">> $file
-			chmod 755 $file
 			/usr/local/bin/php-cgi -f conf/bin/change_ver.php
 		else 
 			echo "You have version number "`echo $thebrigversion`
@@ -84,22 +68,6 @@ if [ "$thebrig_installed" ]; then
 				exit
 			else
 				echo "Thebrig will update.."
-				file=conf/bin/change_ver.php
-				echo "#!/usr/local/bin/php-cgi -f" > $file
-				echo "<?php" >> $file
-				echo "include (\"config.inc\");">> $file
-				echo "if ($config['thebrig']['version'] == 1) { echo \"this is first thebrig version\"; }">> $file
-				echo "else { exit;}">> $file
-				echo "\$langfile = file(\"/usr/local/www/ext/thebrig/lang.inc\");" >> $file
-				echo "\$version_1 = preg_split ( \"/VERSION_NBR, 'v/\", $langfile[1]);">> $file
-				echo "echo \"\n\";">> $file
-				echo "\$version=substr($version_1[1],0,3);">> $file
-				echo "echo \$version;">> $file
-				echo "\$config['thebrig']['version'] = \$version;">> $file
-				echo "write_config();">> $file
-				echo "echo \"\n\";">> $file
-				echo "?>">> $file
-				chmod 755 $file
 				/usr/local/bin/php-cgi -f conf/bin/change_ver.php
 				message="Congratulations! Updated to version "$revision". Navigate to rudimentary config and push Save"
 			fi
