@@ -75,9 +75,11 @@ then
 			ln -s "$file" "${file##*/}"
 		done
 	cd $startfolder
-	# rm -rf temporary/
+	rm -rf temporary/
 	echo "Congratulations! Thebrig was updated/installed . Navigate to rudimentary config and push Save"
 	
 else
 	echo "You use fresh version"
 fi
+rm /tmp/thebriginstaller
+rm /tmp/thebrigversion
