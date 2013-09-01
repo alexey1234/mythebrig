@@ -51,35 +51,36 @@ file="/tmp/thebrigversion"
 if [ -f "$file" ]
 then
 	echo "Thebrig install/update"
-	if [ `uname -p` = "amd64" ]; then
-		echo "Renaming 64 bit ftp binary"
-		mv conf/bin/ftp_amd64 conf/bin/ftp
-		rm conf/bin/ftp_i386
-	else
-		echo "Renaming 32 bit ftp binary"
-		mv conf/bin/ftp_i386 conf/bin/ftp
-		rm conf/bin/ftp_amd64
-	fi
+		if [ `uname -p` = "amd64" ]; then
+			echo "Renaming 64 bit ftp binary"
+			mv conf/bin/ftp_amd64 conf/bin/ftp
+			rm conf/bin/ftp_i386
+		else
+			echo "Renaming 32 bit ftp binary"
+			mv conf/bin/ftp_i386 conf/bin/ftp
+			rm conf/bin/ftp_amd64
+		fi
 	cp -r * $BRIG_ROOT/
 	mkdir -p /usr/local/www/ext/thebrig
 	cp $BRIG_ROOT/conf/ext/thebrig/* /usr/local/www/ext/thebrig
 	cd /usr/local/www
 	# For each of the php files in the extensions folder
 	for file in /usr/local/www/ext/thebrig/*.php
-		do
-		# Check if the link is alredy there
-			if [ -e "${file##*/}" ]; then
-				rm "${file##*/}"
-			fi
+	do
+	# Check if the link is alredy there
+		if [ -e "${file##*/}" ]; then
+			rm "${file##*/}"
+		fi
 			# Create link
-			ln -s "$file" "${file##*/}"
+		ln -s "$file" "${file##*/}"
 		done
-	cd $startfolder
-	rm -rf temporary/
-	echo "Congratulations! Thebrig was updated/installed . Navigate to rudimentary config and push Save"
-	
+	echo "Congratulations! Thebrig was updated/installed . Navigate to rudimentary config and push Save "
 else
 	echo "You use fresh version"
 fi
+# Clean after work
+cd $startfolder
+rm -Rf temporary/*
+rmdir temporary
 rm /tmp/thebriginstaller
 rm /tmp/thebrigversion
