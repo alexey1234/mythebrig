@@ -1,14 +1,39 @@
 #!/usr/local/bin/php-cgi -f
 <?php
 include ("config.inc");
-if ($config['thebrig']['version'] == 1) { echo "this is first thebrig version"; }
-else {echo "You have new version"; echo "\n"; exit;} 
-$langfile = file("/usr/local/www/ext/thebrig/lang.inc");
+$thebrigversion=0;
+$workdir_1 = file("/tmp/thebriginstaller");
+$workdir = trim($workdir_1[0]);
+$langfile = file("{$workdir}/temporary/conf/ext/thebrig/lang.inc");
 $version_1 = preg_split ( "/VERSION_NBR, 'v/", $langfile[1]);
-echo "\n";
-$version=substr($version_1[1],0,3);
-echo $version;
-$config['thebrig']['version'] = $version;
-write_config();
-echo "\n";
+$currentversion=substr($version_1[1],0,3);
+if (is_array($config['thebrig'])) {
+		if ($config['thebrig']['rootfolder']) { 
+			$thebrigrootfolder = $config['thebrig']['rootfolder'];
+			$thebrigversion = $config['thebrig']['version'];
+			if ($thebrigversion == $currentversion) {
+				$message = "No need updates \n"; 
+				if (is_file("/tmp/thebrigversion") ) unlink ("/tmp/thebrigversion");
+				goto met1;
+				}
+			elseif ( $thebrigversion == 1 )  {
+				$message = "You use first thebrig version \n";
+				$config['thebrig']['version'] = $currentversion;
+				write_config();
+				file_put_contents("/tmp/thebrigversion", "install");
+				}
+			else {
+				$message = "You use old thebrig version, we reinstall it \n";
+				$config['thebrig']['version'] = $currentversion;
+				write_config();
+				file_put_contents("/tmp/thebrigversion", "install");
+				}
+			}
+		else { $message = "You cannot have Thebrig installed"; 
+		file_put_contents("/tmp/thebrigversion", "install");
+		}
+		}
+	else { $message = "Hello new user, We will install TheBrig now \n";
+	file_put_contents("/tmp/thebrigversion", "install"); }
+met1 : echo $message;
 ?>

@@ -4,7 +4,7 @@
 # returning 1.
 exerr () { echo -e "$*" >&2 ; exit 1; }
 startfolder=`pwd`
-
+echo $startfolder > /tmp/thebriginstaller
 # This first checks to see that the user has supplied an argument
 if [ ! -z $1 ]; then
     # The first argument will be the path that the user wants to be the root folder.
@@ -18,6 +18,7 @@ if [ ! -z $1 ]; then
         mkdir -p $BRIG_ROOT || exerr "ERROR: Could not create directory!"
     fi
 	mkdir -p temporary || exerr "ERROR: Could not create install directory!"
+	echo $BRIG_ROOT > /tmp/thebrig.tmp
 	cd temporary || exerr "ERROR: Could not access install directory!"
 #    cd $BRIG_ROOT || exerr "ERROR: Could not access install directory!"
 else
@@ -44,65 +45,39 @@ echo "Unpacking the tarball..."
 tar -xvf master.zip --exclude='.git*' --strip-components 1
 # Get rid of the tarball
 rm master.zip
+/usr/local/bin/php-cgi -f conf/bin/change_ver.php
 
-. /etc/rc.subr
-. /etc/configxml.subr
-thebrigversion=0
-thebrig_installed=`/usr/local/bin/xml sel -t -v //thebrig /conf/config.xml`
-if [ "$thebrig_installed" ]; then
-	thebrigversion=`configxml_get "//thebrig/version"`
-	if [ $thebrigversion == 1 ]; then
-			echo "You have first version. It will updated.."
-			/usr/local/bin/php-cgi -f conf/bin/change_ver.php
-		else 
-			echo "You have version number "`echo $thebrigversion`
-			thebrigversion1=`configxml_get "//thebrig/version" | head -c1`
-			thebrigversion2=`configxml_get "//thebrig/version" | tail -c2`
-			thebrigversion3=$((thebrigversion1*10+thebrigversion2))
-			revision=`cat conf/ext/thebrig/lang.inc | grep _THEBRIG_VERSION_NBR, | awk '{print $2}' | tail -c7 | head -c3`
-			revision1=`cat conf/ext/thebrig/lang.inc | grep _THEBRIG_VERSION_NBR, | awk '{print $2}' | tail -c7 | head -c1`
-			revision2=`cat conf/ext/thebrig/lang.inc | grep _THEBRIG_VERSION_NBR, | awk '{print $2}' | tail -c5 | head -c1`
-			revision3=$((revision1*10+revision2))
-			if [ "$thebrigversion3" -ge "$revision3" ]; then
-				echo "You use current.."
-				exit
-			else
-				echo "Thebrig will update.."
-				/usr/local/bin/php-cgi -f conf/bin/change_ver.php
-				message="Congratulations! Updated to version "$revision". Navigate to rudimentary config and push Save"
-			fi
-		fi
-else
-		echo $BRIG_ROOT > /tmp/thebrig.tmp
-		message="Congratulations! Refresh to see a new tab under \" Extensions\"!"
-fi
-
-
-# Rename some files we have so there is only one bin/ftp
-if [ `uname -p` = "amd64" ]; then
-    echo "Renaming 64 bit ftp binary"
-    mv conf/bin/ftp_amd64 conf/bin/ftp
-    rm conf/bin/ftp_i386
-else
-    echo "Renaming 32 bit ftp binary"
-    mv conf/bin/ftp_i386 conf/bin/ftp
-    rm conf/bin/ftp_amd64
-fi
-
-cp -r * $BRIG_ROOT/
-mkdir -p /usr/local/www/ext/thebrig
-cp $BRIG_ROOT/conf/ext/thebrig/* /usr/local/www/ext/thebrig
-cd /usr/local/www
-# For each of the php files in the extensions folder
-for file in /usr/local/www/ext/thebrig/*.php
-do
-	# Check if the link is alredy there
-	if [ -e "${file##*/}" ]; then
-		rm "${file##*/}"
+file="/tmp/thebrigversion"
+if [ -f "$file" ]
+then
+	echo "Thebrig install/update"
+	if [ `uname -p` = "amd64" ]; then
+		echo "Renaming 64 bit ftp binary"
+		mv conf/bin/ftp_amd64 conf/bin/ftp
+		rm conf/bin/ftp_i386
+	else
+		echo "Renaming 32 bit ftp binary"
+		mv conf/bin/ftp_i386 conf/bin/ftp
+		rm conf/bin/ftp_amd64
 	fi
-	# Create link
-	ln -s "$file" "${file##*/}"
-done
-cd $startfolder
-rm -rf temporary/
-echo $message
+	cp -r * $BRIG_ROOT/
+	mkdir -p /usr/local/www/ext/thebrig
+	cp $BRIG_ROOT/conf/ext/thebrig/* /usr/local/www/ext/thebrig
+	cd /usr/local/www
+	# For each of the php files in the extensions folder
+	for file in /usr/local/www/ext/thebrig/*.php
+		do
+		# Check if the link is alredy there
+			if [ -e "${file##*/}" ]; then
+				rm "${file##*/}"
+			fi
+			# Create link
+			ln -s "$file" "${file##*/}"
+		done
+	cd $startfolder
+	# rm -rf temporary/
+	echo "Congratulations! Thebrig was updated/installed . Navigate to rudimentary config and push Save"
+	
+else
+	echo "You use fresh version"
+fi
