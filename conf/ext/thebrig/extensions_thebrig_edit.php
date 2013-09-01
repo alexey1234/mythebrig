@@ -305,14 +305,6 @@ if ($_POST) {
 				} // end of for loop
 			} // end of else (we're adding a new jail
 		} // end of jail number conflict
-		
-		
-		
-		
-		
-		
-		
-		
 		$jail = array();
 		$jail['uuid'] = $pconfig['uuid'];
 		$jail['enable'] = isset($pconfig['enable']) ? true : false;
@@ -442,20 +434,6 @@ function type_change(){
 	document.iform.type.value = y[x].value;
 	switch (x) {
 	case 0:
-		document.iform.jail_mount.checked=true;
-		document.iform.jail_mount.onclick= function () {event.preventDefault();};
-		break;
-	case 1:
-		document.iform.jail_mount.onclick= function() {"";};
-		break;
-	}
-}
-function type_change(){
-	var x=document.iform.jail_type.selectedIndex;
-	var y=document.iform.jail_type.options;
-	document.iform.type.value = y[x].value;
-	switch (x) {
-	case 0:
 		showElementById('mounts_separator_empty','show');
 		showElementById('mounts_separator','show');
 		showElementById('jail_mount_tr','hide');
@@ -576,11 +554,11 @@ function redirect() {
 			<tr id='mounts_separator_empty'>	<td colspan='2' class='list' height='12'></td>
 			<tr id='mounts_separator'><td colspan='2' valign='top' class='listtopic'>Mounts</td></tr>
 			
- 			<?php html_checkbox("jail_mount", gettext("mount/umount jail's fs"), !empty($pconfig['jail_mount']) ? true : false, gettext("Enable the jail to automount its fstab file. <b>This is not optional for thin jails.</b> ")," " ," ", "event.preventDefault()");?>
-			<?php html_checkbox("devfs_enable", gettext("Enable mount devfs"), !empty($pconfig['devfs_enable']) ? true : false, gettext("Use to mount the device file system inside the jail. <br><b>This must be checked if you want 'ps', 'top' or most rc.d scripts to function inside jail.</b>"), "", false);?>
+ 			<?php html_checkbox("jail_mount", gettext("mount/umount jail's fs"), !empty($pconfig['jail_mount']) ? true : false, gettext("Enable the jail to automount its fstab file. ")," " ," ", "");?>
+			<?php html_checkbox("devfs_enable", gettext("Enable mount devfs"), !empty($pconfig['devfs_enable']) ? true : false, gettext("Use to mount the device file system inside the jail. <br>"), "", false);?>
 			<?php /*html_inputbox("devfsrules", gettext("Devfs ruleset name"), !empty($pconfig['devfsrules']) ? $pconfig['devfsrules'] : "devfsrules_jail", gettext("You can change standart ruleset"), false, 30);*/?>
-			<?php html_checkbox("proc_enable", gettext("Enable mount procfs"), !empty($pconfig['proc_enable']) ? true : false, "", "", false);?>
-			<?php html_checkbox("fdescfs_enable", gettext("Enable mount fdescfs"), !empty($pconfig['fdescfs_enable']) ? true : false, "", "", false);?>
+			<?php html_checkbox("proc_enable", gettext("Enable mount procfs"), !empty($pconfig['proc_enable']) ? true : false, "This must be checked if you want 'ps', 'top' or most rc.d scripts to function inside jail.", "", false);?>
+			<?php html_checkbox("fdescfs_enable", gettext("Enable mount fdescfs"), !empty($pconfig['fdescfs_enable']) ? true : false, "The file-descriptor file system, or <a href=http://www.freebsd.org/cgi/man.cgi?query=fdescfs&sektion=5>fdescfs</a>, provides access to the perprocess file descriptor namespace in the global file system namespace.", "", false);?>
 			<?php html_checkbox("ports", gettext("Enable mount piblic ports"), !empty($pconfig['ports']) ? true : false, "", "", false);?>
 			<!---<?php html_textarea("auxparam", gettext("Fstab"), $pconfig['auxparam'] , sprintf(gettext(" This will be added to fstab.  Format: device &lt;space&gt; mount-point as full path &lt;space&gt; fstype &lt;space&gt; options &lt;space&gt; dumpfreq &lt;space&gt; passno. If no need fstab - delete default line.  <a href=http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/mount-unmount.html target=\"_blank\">Manual</a> ")), false, 65, 5, false, false);?>
 		-->	<?php html_separator();?>
