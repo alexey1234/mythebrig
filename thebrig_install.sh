@@ -84,3 +84,5 @@ rm -Rf temporary/*
 rmdir temporary
 rm /tmp/thebriginstaller
 rm /tmp/thebrigversion
+currentdate=`date -j +"%Y-%m-%d %H:%M:%S"`
+echo "[$currentdate]: TheBrig installer!: installer: install/upgrade action successfull" >> $BRIG_ROOT/thebrig.log
