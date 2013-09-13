@@ -4,5 +4,8 @@
 *
 !conf
 !conf/*
+!conf/*.conf
 !conf/bin
 !conf/bin/*
+!conf/sbin
+!conf/sbin/*
