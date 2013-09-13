@@ -65,22 +65,10 @@ then
 			echo "Renaming 64 bit ftp binary"
 			mv conf/bin/ftp_amd64 conf/bin/ftp
 			rm conf/bin/ftp_i386
-			mv conf/bin/openssl_amd64 conf/bin/openssl
-			rm conf/bin/openssl_i386
-			mv conf/sbin/portsnap_amd64 conf/sbin/portsnap
-			rm conf/sbin/portsnap_i386
-			mv conf/sbin/freebsd-update_amd64 conf/sbin/freebsd-update
-			rm conf/sbin/freebsd-update_i386
 		else
 			echo "Renaming 32 bit ftp binary"
 			mv conf/bin/ftp_i386 conf/bin/ftp
 			rm conf/bin/ftp_amd64
-			mv conf/bin/openssl_i386 conf/bin/openssl
-			rm conf/bin/openssl_amd64
-			mv conf/sbin/portsnap_i386 conf/sbin/portsnap
-			rm conf/sbin/portsnap_amd64
-			mv conf/sbin/freebsd-update_i386 conf/sbin/freebsd-update
-			rm conf/sbin/freebsd-update_amd64
 		fi
 	cp -r * $BRIG_ROOT/
 	mkdir -p /usr/local/www/ext/thebrig
