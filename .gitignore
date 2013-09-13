@@ -1,4 +1,8 @@
 #################
 ## mythebrig
 #################
-
+*
+!conf
+!conf/*
+!conf/bin
+!conf/bin/*
