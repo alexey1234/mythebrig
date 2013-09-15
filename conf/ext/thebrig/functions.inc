@@ -691,6 +691,7 @@ function get_nice_filesize ($file) {
 		return "$dsize KB";
 	}
 }
+// this function create rc.conf local and fstabs for jails.
 function write_rcconflocal () {
 global $config, $g;
 $testarray = array();
