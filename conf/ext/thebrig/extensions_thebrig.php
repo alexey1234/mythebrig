@@ -105,7 +105,7 @@ function thebrig_process_updatenotification($mode, $data) {
 			}
 			break;
 		case UPDATENOTIFY_MODE_DIRTY:
-			// This indicates that we want to delete one or more of the jails
+			// This indicates that we want to delete one or more of  the jails
 			$cnid = array_search_ex($data, $config['thebrig']['content'], "uuid");
 			if (false !== $cnid) {
 				$timestamp = date("Y-m-d_H:i:s");

@@ -732,7 +732,7 @@ foreach ($testarray as $out_jail ) {
 						fwrite( $handle1 ,"procfs " .  $out_jail['jailpath'] . "proc procfs rw 0 0\n"); } else {fwrite($handle, "jail_{$out_jail['jailname']}_procfs_enable=\"NO\"\n");}
 				If (isset($out_jail['fdescfs_enable'])) { fwrite ($handle, "jail_{$out_jail['jailname']}_fdescfs_enable=\"YES\"\n"); 
 						fwrite( $handle1 ,"fdescfs " .  $out_jail['jailpath'] . "dev/fd fdescfs rw 0 0\n"); } else {fwrite($handle, "jail_{$out_jail['jailname']}_fdescfs_enable=\"NO\"\n");}
-				$basejailfolder	= 	 substr($config['thebrig']['basejail']['folder'], 0, strlen($config['thebrig']['basejail']['folder'])-1);
+				$basejailfolder	=  substr($config['thebrig']['basejail']['folder'], 0, strlen($config['thebrig']['basejail']['folder'])-1);
 				fwrite( $handle1 ,  $basejailfolder . " " .  $out_jail['jailpath'] . "basejail nullfs ro 0 0\n");
 			break;
 			case "full":
