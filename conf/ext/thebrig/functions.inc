@@ -691,7 +691,6 @@ function get_nice_filesize ($file) {
 		return "$dsize KB";
 	}
 }
-// this function create rc.conf local and fstabs for jails.
 function write_rcconflocal () {
 global $config, $g;
 $testarray = array();
@@ -711,8 +710,7 @@ array_sort_key($testarray, "jailno");
 foreach ($testarray as $out_jail ) {
 		If (isset($out_jail['enable'])) {$startonboot = "{$startonboot} {$out_jail['jailname']}";} else {$startonboot = $startonboot;}
 		fwrite ($handle, "##{$k}###########{$out_jail['jailname']}####{$out_jail['desc']}#####\n");
-		$out_jail_comb = substr($out_jail['jailpath'], 0, strlen($out_jail['jailpath'])-1);
-		fwrite ($handle, "jail_{$out_jail['jailname']}_rootdir=\"{$out_jail_comb}\"\n");
+		fwrite ($handle, "jail_{$out_jail['jailname']}_rootdir=\"{$out_jail['jailpath']}\"\n");
 		fwrite ($handle, "jail_{$out_jail['jailname']}_hostname=\"{$out_jail['jailname']}.{$config['system']['domain']}\"\n");
 		fwrite ($handle, "jail_{$out_jail['jailname']}_interface=\"{$out_jail['if']}\"\n");
 		fwrite ($handle, "jail_{$out_jail['jailname']}_ip=\"{$out_jail['ipaddr']}/{$out_jail['subnet']}\"\n");
@@ -735,7 +733,7 @@ foreach ($testarray as $out_jail ) {
 				If (isset($out_jail['fdescfs_enable'])) { fwrite ($handle, "jail_{$out_jail['jailname']}_fdescfs_enable=\"YES\"\n"); 
 						fwrite( $handle1 ,"fdescfs " .  $out_jail['jailpath'] . "dev/fd fdescfs rw 0 0\n"); } else {fwrite($handle, "jail_{$out_jail['jailname']}_fdescfs_enable=\"NO\"\n");}
 				$basejailfolder	= 	 substr($config['thebrig']['basejail']['folder'], 0, strlen($config['thebrig']['basejail']['folder'])-1);
-				fwrite( $handle1 ,  $basejailfolder . " " .  $out_jail['jailpath'] . "basejail nullfs ro 0 0\n"); 
+				fwrite( $handle1 ,  $basejailfolder . " " .  $out_jail['jailpath'] . "basejail nullfs ro 0 0\n");
 			break;
 			case "full":
 				If (isset($out_jail['jail_mount'])) { fwrite ($handle, "jail_{$out_jail['jailname']}_mount_enable=\"YES\"\n"); } else {fwrite($handle, "jail_{$out_jail['jailname']}_mount_enable=\"NO\"\n");}
@@ -761,7 +759,11 @@ foreach ($testarray as $out_jail ) {
 				If (isset($out_jail['fdescfs_enable'])) { fwrite ($handle, "jail_{$out_jail['jailname']}_fdescfs_enable=\"YES\"\n");} else {fwrite($handle, "jail_{$out_jail['jailname']}_fdescfs_enable=\"NO\"\n");}
 			break;
 		}	
-		if (TRUE == is_array($out_jail['auxparam'])) { foreach ($out_jail['auxparam'] as $fstab) {	fwrite ($handle1, $fstab."\n"); } } else {}
+		if (is_array($out_jail['auxparam'])) { foreach ($out_jail['auxparam'] as $fstab) {	fwrite ($handle1, $fstab."\n"); } }
+		if (isset($out_jail['ports'])) { 
+		$portsjailfolder	= 	$config['thebrig']['rootfolder']."conf/ports";
+		fwrite( $handle1 ,  $portsjailfolder . " " .  $out_jail['jailpath'] . "usr/ports nullfs ro 0 0\n");
+		} else {}
 		fclose($handle1);
 	}
 $startonboot = ltrim( $startonboot );
