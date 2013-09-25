@@ -117,6 +117,10 @@ if ($_POST) {
 					$config_changed=true;
 					// Create directory, remove anything within the directory, and mount the ports
 					exec ( "mkdir " . $my_jail['jailpath'] . "usr/ports");
+					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports");
+					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports/packages");
+					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports/distfiles");
+					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports/usr");
 					exec ( "rm -r " . $my_jail['jailpath'] . "usr/ports/*");
 					exec ( "mount -t nullfs -r " . $brig_root . "conf/ports " . $my_jail['jailpath'] . "usr/ports");
 					// Make backup of existing make file for later
