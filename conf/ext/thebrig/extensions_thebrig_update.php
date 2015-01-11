@@ -14,19 +14,29 @@ $pgtitle = array(_THEBRIG_EXTN , _THEBRIG_TITLE, _THEBRIG_UPDATER);
 
 // we run the "prep" function to see if all the binaries we need are present in a jail (any jail). If they aren't we can't proceed
 $brig_update_ready = thebrig_update_prep();
-// Slight redefinition to make life a little easier
-$brig_root = $config['thebrig']['rootfolder'] ;
-$brig_update_db = $brig_root . "conf/db/freebsd-update/";
 
-if (is_array ($config['thebrig']['content'])) { array_sort_key($config['thebrig']['content'], "jailno");
-$a_jail = &$config['thebrig']['content'];}
-$pconfig['updatecron'] = isset( $config['thebrig']['updatecron'] ) ;
+if ($brig_update_ready == 0 ){
+	// The operations carried out in thebrig_update_prep will only return 0 if there is at least one complete jail,
+	// and the necessary binaries for update operations were able to be copied. If there are no jails present, then the function
+	// will return 2
+	
+	// Slight redefinition to make life a little easier
+	$brig_root = $config['thebrig']['rootfolder'] ;
+	$brig_update_db = $brig_root . "conf/db/freebsd-update/";
+
+	// See my above comments for why the if() that used to live here is no longer needed
+	if (!is_array($config['thebrig']['content'])) {$input_errors[] = "Not defined any jail. I don't know what you want "; goto out;}
+	array_sort_key($config['thebrig']['content'], "jailno");
+	$a_jail = &$config['thebrig']['content'];
+	$pconfig['updatecron'] = isset( $config['thebrig']['updatecron'] ) ;
 
 
-$basedir_hash = exec ( "echo " . $a_jail[0]['jailpath'] . " | sha256 -q" );
-if ( is_link ( $a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) ) {
-	//$input_errors[]=$a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback";
+	$basedir_hash = exec ( "echo " . $a_jail[0]['jailpath'] . " | sha256 -q" );
+	if ( is_link ( $a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) ) {
+		//$input_errors[]=$a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback";
+	}
 }
+
 // User has clicked a button
 if ($_POST) {
 	unset($input_errors);
@@ -45,7 +55,7 @@ if ($_POST) {
 				for ($i; $i < count( $config['cron']['job'] ); $i++) {
 					// This loops through all the cron job entries, and if it finds thebrig_ports_cron.php (placed by hand),
 					// it will update the entry to reflect the new location by breaking out of the for loop at the correct index.
-					if ( preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
+					if ( 1 == preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
 						unset($config['cron']['job'][$i]);
 				} // end of for loop
 			} // end of array if statment
@@ -62,12 +72,12 @@ if ($_POST) {
 			$brig_cron_job['hour']=1;
 			$brig_cron_job['day']="";
 			$brig_cron_job['month']="";
-			$brig_cron_job['weekday']="";
+			$brig_cron_job['weekday']=2;
 			$brig_cron_job['all_mins']=0;
 			$brig_cron_job['all_hours']=0;
 			$brig_cron_job['all_days']=1;
 			$brig_cron_job['all_months']=1;
-			$brig_cron_job['all_weekdays']=1;
+			$brig_cron_job['all_weekdays']=0;
 			$brig_cron_job['who']="root";
 			$brig_cron_job['command'] = "/usr/local/bin/php-cgi " . $brig_root . "conf/bin/thebrig_update_cron.php";
 
@@ -78,7 +88,7 @@ if ($_POST) {
 				for ($i; $i < count( $config['cron']['job'] ); $i++) {
 					// This loops through all the cron job entries, and if it finds thebrig_ports_cron.php (placed by hand),
 					// it will update the entry to reflect the new location by breaking out of the for loop at the correct index.
-					if ( preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
+					if ( 1 == preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
 						break;
 				} // end of for loop
 			} // end of array if statment
@@ -101,7 +111,7 @@ if ($_POST) {
 				// we need to search through the array of listed jails to see if any of them are thin jails
 				$jid = array_search_ex($job_jail, $a_jail , 'uuid' );
 				
-				if ( $a_jail[$jid]['type'] == 'slim' && $job_jail != "00000000-0000-0000-0000-000000000000" ){
+				if ( $a_jail[$jid]['jail_type'] == 'slim' && $job_jail != "00000000-0000-0000-0000-000000000000" ){
 					$base_selected=true;
 				}
 				if ( $job_jail === "00000000-0000-0000-0000-000000000000")
@@ -121,26 +131,26 @@ if ($_POST) {
 				// Check for the existence of the -install link 
 				if ( ! is_link ( $my_jail['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-install" ) && $pconfig['update_op'] == "Install") {
 				// We are attempting to rollback a jail that can't be
-					$input_errors[] = "The jail named " . $my_jail['name'] . " does not have any updates ready for installation. <br>Please run 'fetch' for this jail.";
+					$input_errors[] = "The jail named " . $my_jail['jailname'] . " does not have any updates ready for installation. <br>Please run 'fetch' for this jail.";
 					break;
 				}
 				
 				// Check for a rollback
 				if ( ! is_link ( $my_jail['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) && $pconfig['update_op'] == "Rollback") {
 					// We are attempting to rollback a jail that can't be
-					$input_errors[] = "The jail named " . $my_jail['name'] . " cannot have its installation rolled back. <br>Sorry.";
+					$input_errors[] = "The jail named " . $my_jail['jailname'] . " cannot have its installation rolled back. <br>Sorry.";
 					break;
 				}
 				
 				
 				// This if gets entered the jail is checked and is fullsized
-				if  ( (FALSE !== ($cnid = array_search($my_jail['uuid'], $formjails ))) && $my_jail['type'] == 'full' ){
+				if  ( (FALSE !== ($cnid = array_search($my_jail['uuid'], $formjails ))) && $my_jail['jail_type'] == 'full' ){
 					$basedir_list[]=$my_jail['jailpath'];
 					$workdir_list[]=$my_jail['jailpath'] . "var/db/freebsd-update/";
 					$conffile_list[] = $brig_root . "conf/freebsd-update.conf";
 				} // end of selected full sized jail
 
-				if ( $my_jail['type'] == 'slim' && $base_selected ){
+				if ( $my_jail['jail_type'] == 'slim' && $base_selected ){
 					// We are looking at a slim jail, and we are supposed to upgrade all of them
 					$basedir_list[]=$my_jail['jailpath'];
 					$workdir_list[]=$my_jail['jailpath'] . "var/db/freebsd-update/";
@@ -212,8 +222,8 @@ if ($_POST) {
 			// Need to cycle through all the jails (again)
 			foreach ( $a_jail as &$my_jail ) {
 				// This if gets entered the jail is checked and is fullsized, OR is thin and we selected to upgrade them all
-				if  ( (FALSE !== ($cnid = array_search($my_jail['uuid'], $formjails )) && $my_jail['type'] == 'full' )  ||
-						( $my_jail['type'] == 'slim' && $base_selected ) ){
+				if  ( (FALSE !== ($cnid = array_search($my_jail['uuid'], $formjails )) && $my_jail['jail_type'] == 'full' )  ||
+						( $my_jail['jail_type'] == 'slim' && $base_selected ) ){
 					$config_changed = true;
 					$basedir_hash = exec ( "echo " . $my_jail['jailpath'] . " | sha256 -q" );
 					if ( is_link ( $my_jail['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" )) {
@@ -266,7 +276,7 @@ if ($_POST) {
 		$savemsg = get_std_save_message($retval);
 	} // end of no input errors
 } // end of POST
-
+out:
 // Uses the global fbegin include
 include("fbegin.inc");
 
@@ -354,9 +364,6 @@ function conf_handler() {
 				</a></li>
 				<li class="tabinact"><a href="extensions_thebrig_ports.php"><span><?=_THEBRIG_PORTS;?>
 					</span> </a></li>
-				<li class="tabinact"><a href="extensions_thebrig_manager.php"><span><?=_THEBRIG_MANAGER;?>
-					</span> </a>
-				</li>
 			</ul>
 		</td>
 	</tr>
@@ -365,6 +372,7 @@ function conf_handler() {
 		<td class="tabcont">
 			<form action="extensions_thebrig_update.php" method="post"
 				name="iform" id="iform" onsubmit="return checkBeforeSubmit();">
+				<?php $msg =  _THEBRIG_NOT_CONFIRMED; if (is_file("/tmp/thebrig.tmp")) print_warning_box( $msg); ?>
 				<table width="100%" border="0" cellpadding="6" cellspacing="0">
 		<?php if ( $brig_update_ready == 2 ) {
 			// The necessary binaries for all the update tasks could not be found in any jail.
@@ -435,17 +443,17 @@ function conf_handler() {
 									</td>
 								</tr>
 			<?php $k = 0; for( $k; $k < count ( $a_jail ) ; $k ++ ):
-				if ( file_exists ( $a_jail[$k]['jailpath'] . "var/db/freebsd-update/tag")){
+				if ( file_exists ( $a_jail[$k]['jailpath'] . "/var/db/freebsd-update/tag")){
 				// Extract the most recent tag's date, and convert from Unix epoch to a readable date
-					$tag_full = explode( "|", file_get_contents($a_jail[$k]['jailpath'] . "var/db/freebsd-update/tag")) ;
+					$tag_full = explode( "|", file_get_contents($a_jail[$k]['jailpath'] . "/var/db/freebsd-update/tag")) ;
 					$tag_version = $tag_full[2] . "-p" . $tag_full[3];
-					$tag_date = date ( "M d Y" ,filemtime( $a_jail[$k]['jailpath'] . "var/db/freebsd-update/tag" ));
+					$tag_date = date ( "M d Y" ,filemtime( $a_jail[$k]['jailpath'] . "/var/db/freebsd-update/tag" ));
 					// Check if there are any pending updates (file lists have been created)
 					if ( file_exists ( $a_jail[$k]['jailpath'] . "var/db/freebsd-update/files.updated" ) ) {
 						$updated_contents[$k] = rtrim ( file_get_contents($a_jail[$k]['jailpath'] . "var/db/freebsd-update/files.updated"));
 						$added_contents[$k] = rtrim(file_get_contents($a_jail[$k]['jailpath'] . "var/db/freebsd-update/files.added"));
 						$removed_contents[$k] = rtrim(file_get_contents($a_jail[$k]['jailpath'] . "var/db/freebsd-update/files.removed"));
-						if ( $a_jail[$k]['type'] == 'slim' ){
+						if ( $a_jail[$k]['jail_type'] == 'slim' ){
 						// we're talking about a slim jail here, we should check if this is the first slim we've prepped for
 						// If so, we need ot define a few "constant" values for the duration of this for loop
 							if ( !isset( $base_update_contents) && file_exists( $brig_update_db . "files.updated" ) ) {
@@ -551,9 +559,9 @@ function conf_handler() {
 				<?php html_separator();
 				html_titleline(gettext("Update Details"));
 				// Build an array with the keys as the jail uuid, and with the value as the jail's name
-				$jail_names = array(); if (is_array($a_jail)) {
+				$jail_names = array();
 				foreach ( $a_jail as $one_jail){
-					$jail_names[$one_jail['uuid']]=$one_jail['jailname'];} }
+					$jail_names[$one_jail['uuid']]=$one_jail['jailname'];}
 				$jail_names['00000000-0000-0000-0000-000000000000']="TEMPLATE";
 				html_combobox("jail_name", gettext("Jail Name"), $pconfig['type'], $jail_names, gettext("Choose jail to view more information regarding a pending update."), "","","");?>
 				<?php $i = 0; for( $i; $i < count ( $a_jail ) ; $i ++ ): 

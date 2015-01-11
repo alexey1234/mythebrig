@@ -14,14 +14,21 @@ $pgtitle = array(_THEBRIG_EXTN , _THEBRIG_TITLE, _THEBRIG_PORTS);
 
 // we run the "prep" function to see if all the binaries we need are present in a jail (any jail). If they aren't we can't proceed
 $brig_update_ready = thebrig_update_prep();
-// Slight redefinition to make life a little easier
-$brig_root = $config['thebrig']['rootfolder'] ;
-$brig_port_db = $brig_root . "conf/db/ports/";
 
-if (is_array ($config['thebrig']['content'])) { array_sort_key($config['thebrig']['content'], "jailno"); }
-$a_jail = &$config['thebrig']['content'];
-$pconfig['portscron'] = isset( $config['thebrig']['portscron'] ) ;
+if ( $brig_update_ready == 0 ){
+	// The operations carried out in thebrig_update_prep will only return 0 if there is at least one complete jail,
+	// and the necessary binaries for update operations were able to be copied. If there are no jails present, then the function
+	// will return 2
 
+	// Slight redefinition to make life a little easier
+	$brig_root = $config['thebrig']['rootfolder'] ;
+	$brig_port_db = $brig_root . "conf/db/ports/";
+
+	// See my above comments for why the if() that used to live here is no longer needed
+	array_sort_key($config['thebrig']['content'], "jailno");
+	$a_jail = &$config['thebrig']['content'];
+	$pconfig['portscron'] = isset( $config['thebrig']['portscron'] ) ;
+}
 
 // User has clicked a button
 if ($_POST) {
@@ -43,7 +50,7 @@ if ($_POST) {
 				for ($i; $i < count( $config['cron']['job'] ); $i++) {
 					// This loops through all the cron job entries, and if it finds thebrig_ports_cron.php (placed by hand),
 					// it will update the entry to reflect the new location by breaking out of the for loop at the correct index.
-					if ( preg_match('/thebrig_ports_cron\.php/', $config['cron']['job'][$i]['command']))
+					if ( 1 == preg_match('/thebrig_ports_cron\.php/', $config['cron']['job'][$i]['command']))
 						unset($config['cron']['job'][$i]);
 				} // end of for loop
 			} // end of array if statment
@@ -77,7 +84,7 @@ if ($_POST) {
 				for ($i; $i < count( $config['cron']['job'] ); $i++) {
 					// This loops through all the cron job entries, and if it finds thebrig_ports_cron.php (placed by hand),
 					// it will update the entry to reflect the new location by breaking out of the for loop at the correct index.
-					if ( preg_match('/thebrig_ports_cron\.php/', $config['cron']['job'][$i]['command']))
+					if ( 1== preg_match('/thebrig_ports_cron\.php/', $config['cron']['job'][$i]['command']))
 						break;
 				} // end of for loop
 			} // end of array if statment
@@ -117,10 +124,6 @@ if ($_POST) {
 					$config_changed=true;
 					// Create directory, remove anything within the directory, and mount the ports
 					exec ( "mkdir " . $my_jail['jailpath'] . "usr/ports");
-					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports");
-					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports/packages");
-					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports/distfiles");
-					exec ( "mkdir " . $my_jail['jailpath'] . "var/ports/usr");
 					exec ( "rm -r " . $my_jail['jailpath'] . "usr/ports/*");
 					exec ( "mount -t nullfs -r " . $brig_root . "conf/ports " . $my_jail['jailpath'] . "usr/ports");
 					// Make backup of existing make file for later
@@ -214,9 +217,6 @@ function conf_handler() {
 				<li class="tabact"><a href="extensions_thebrig_ports.php"
 					title="<?=gettext("Reload page");?>"><span><?=_THEBRIG_PORTS;?> </span>
 				</a></li>
-				<li class="tabinact"><a href="extensions_thebrig_manager.php"><span><?=_THEBRIG_MANAGER;?>
-					</span> </a>
-				</li>
 			</ul>
 		</td>
 	</tr>

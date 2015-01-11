@@ -4,8 +4,6 @@
 # returning 1.
 exerr () { echo -e "$*" >&2 ; exit 1; }
 
-# Alexey - the use of pwd is too simplistic. If user is in /etc and calls script, pwd will return /etc
-# Your right, but I need Current Working Folder Name for work! And all files will deleted from /CurrentWorkFolder/temporary or /CurrentWorkFolder/master.zip
 # Determine the current directory
 # Method adapted from user apokalyptik at
 # http://hintsforums.macworld.com/archive/index.php/t-73839.html
@@ -29,7 +27,6 @@ if [ ! -z $1 ]; then
         mkdir -p $BRIG_ROOT || exerr "ERROR: Could not create directory!"
     fi
 	mkdir -p temporary || exerr "ERROR: Could not create install directory!"
-	echo $BRIG_ROOT > /tmp/thebrig.tmp
 	cd temporary || exerr "ERROR: Could not access install directory!"
 #    cd $BRIG_ROOT || exerr "ERROR: Could not access install directory!"
 else
@@ -37,30 +34,39 @@ else
 # current directory as the root.
     BRIG_ROOT=$START_FOLDER
 fi
+# touch /tmp/thebrig.tmp
 
-
-# Fetch the master branch as a zip file
-echo "Retrieving the most recent version of TheBrig"
-fetch https://github.com/alexey1234/mythebrig/archive/master.zip || exerr "ERROR: Could not write to install directory!"
+if [ $2 -eq 3 ]; then 
+    # Fetch the testing branch as a zip file
+    echo "Retrieving the testing branch as a zip file"
+    fetch https://github.com/alexey1234/mythebrig/archive/master.zip || exerr "ERROR: Could not write to install directory!"
+    # mv alcatraz.zip master.zip
+     # Fetch the testing branch as a zip file  I want working branch also for check upgrade
+     # I already merged working --> master! Working === Master
+else
+    # Fetch the master branch as a zip file
+    echo "Retrieving the most recent version of TheBrig"
+    fetch https://github.com/fsbruva/thebrig/archive/working.zip || exerr "ERROR: Could not write to install directory!"
+	mv working.zip master.zip
+fi
 
 
 # Extract the files we want, stripping the leading directory, and exclude
 # the git nonsense
 echo "Unpacking the tarball..."
 tar -xvf master.zip --exclude='.git*' --strip-components 1
-# Get rid of the tarball
 rm master.zip
 
 # Run the change_ver script to deal with different versions of TheBrig
 /usr/local/bin/php-cgi -f conf/bin/change_ver.php
 
-file="/tmp/thebrigversion"
-
+filever="/tmp/thebrigversion"
 # The file /tmp/thebrigversion might get created by the change_ver script
 # Its existence implies that we need to carry out the install procedure
-if [ -f "$file" ]
+if [ -f "$filever" ]
 then
-	echo "Thebrig install/update"
+	action=`cat ${filever}` 
+	# echo "Thebrig "${action}
 		if [ `uname -p` = "amd64" ]; then
 			echo "Renaming 64 bit ftp binary"
 			mv conf/bin/ftp_amd64 conf/bin/ftp
@@ -84,7 +90,8 @@ then
 			# Create link
 		ln -s "$file" "${file##*/}"
 		done
-	echo "Congratulations! Thebrig was updated/installed . Navigate to rudimentary config and push Save "
+	echo $BRIG_ROOT > /tmp/thebrig.tmp
+	echo "Congratulations! Thebrig ${action} . Navigate to rudimentary config tab and push Save "
 else
 # There was not /tmp/thebrigversion, so we are already using the latest version
 	echo "You use fresh version"
@@ -95,6 +102,9 @@ cd $START_FOLDER
 rm -Rf temporary/*
 rmdir temporary
 rm /tmp/thebriginstaller
-rm /tmp/thebrigversion
+if [ -f "$file" ] 
+then 
+	rm /tmp/thebrigversion
+fi
 currentdate=`date -j +"%Y-%m-%d %H:%M:%S"`
-echo "[$currentdate]: TheBrig installer!: installer: install/upgrade action successfull" >> $BRIG_ROOT/thebrig.log
+echo "[$currentdate]: TheBrig installer!: installer: ${action} successfully" >> $BRIG_ROOT/thebrig.log

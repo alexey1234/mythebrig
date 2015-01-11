@@ -1,6 +1,6 @@
 <?php
-	define(_THEBRIG_VERSION_NBR, 'v0.6');
-
+	define(_THEBRIG_VERSION_NBR, 'v0.9');
+	
 	if ($config['system']['language'] == 'en_US') { }
 	
 		define(_THEBRIG_TITLE, "TheBrig");
@@ -12,9 +12,10 @@
 		define(_THEBRIG_UPDATES , "Updates");
 		define(_THEBRIG_PORTS, "Central Ports");
 		define(_THEBRIG_PORT_CRON, "Enable 2:47 a.m. daily cron fetch of port tree.");
-		define(_THEBRIG_UPDATE_CRON, "Enable 1:28 a.m. daily cron fetch of updates for all jails.");
+		define(_THEBRIG_UPDATE_CRON, "Enable 1:28 a.m. Tuesday weekly cron fetch of updates for all jails.");
 		define(_THEBRIG_UPDATER , "FreeBSD Update");
 		define(_THEBRIG_MANAGER , "TheBrig Manager");
+		define(_THEBRIG_MANAGER_TITLE , "Manager");
 		define(_THEBRIG_JAIL, "Jail" );
 		define(_THEBRIG_EDIT, "Edit" );
 		define(_THEBRIG_ADD, "Add" );
@@ -54,6 +55,9 @@
 		define(_THEBRIG_FTPQUERY, "Click the query button to get info about available tarballs." );
 		define(_THEBRIG_QUERYBTN, "Query!" );
 		define(_THEBRIG_CHECK_NETWORKING, "There seems to be a networking issue. I can't reach ftp.freebsd.org. Please check <a href='/system.php'>DNS</a> and other <a href='/interfaces_lan.php'>networking settings</a>. If networking is working, then ensure the ftp binary is present.<br>Alternatively, try it again to see if there was some transient network problem.");
+		define(_THEBRIG_CHECK_NETWORKING_GIT, "There seems to be a networking issue. I can't reach GitHub to retrieve the file. Please check <a href='/system.php'>DNS</a> and other <a href='/interfaces_lan.php'>networking settings</a>. <br>Alternatively, try it again to see if there was some transient network problem.");
+		define(_THEBRIG_GIT_LANG_FAIL, "The fetch succeeded, but the file is missing or not accessible. Please try again!");
+		define(_THEBRIG_ERROR, "ERROR!");
 		define(_THEBRIG_FETCH, "Fetch!");
 		define(_THEBRIG_FETCH_ERROR, "You selected to fetch without selecting any files.");
 		define(_THEBRIG_DELETE_FAIL, "Could not delete file: ");
