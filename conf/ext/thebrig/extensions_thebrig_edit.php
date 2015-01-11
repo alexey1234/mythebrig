@@ -112,7 +112,7 @@ if (isset($uuid) && (FALSE !== ($cnid = array_search_ex($uuid, $a_jail, "uuid"))
 	$pconfig['attach_blocking'] = $a_jail[$cnid]['attach_blocking'];
 	$pconfig['force_blocking'] = $a_jail[$cnid]['force_blocking'];
 	$pconfig['zfs_dataset'] = explode (";", $a_jail[$cnid]['zfs_datasets']);
-	$pconfig['zfs_enable'] =  $a_jail[$cnid]['zfs_enable'];
+	$pconfig['zfs_enable'] =  isset ($a_jail[$cnid]['zfs_enable']);
 	if (FALSE == $a_jail[$cnid]['fib']) { unset ($pconfig['fib']);} else {$pconfig['fib'] = $a_jail[$cnid]['fib'];}
 	if (FALSE == $a_jail[$cnid]['ports']) { unset ($pconfig['ports']);} else {$pconfig['ports'] = $a_jail[$cnid]['ports'];}
 	// By default, when editing an existing jail, path and name will be read only.
@@ -180,6 +180,7 @@ if ($_POST) {
 	}
 	
 	$pconfig = $_POST;
+	
 	// for clean work with new system env
 	unset ($pconfig['allowedipfiletype']);
 	unset ($pconfig['cmdfiletype']);
@@ -232,7 +233,7 @@ if ($_POST) {
 		
 		}
 	// check zfs mount setting 1. enforce_statfs insert foggoten values
-	if ( isset ( $pconfig['zfs_enable'] )) { $config['thebrig']['gl_statfs'] =0; $pconfig['statfs'] =0; } else {}
+	if ( true === isset ( $pconfig['zfs_enable'] )) { $config['thebrig']['gl_statfs'] =0; $pconfig['statfs'] =0; } else {}
 	// remove possible empty string after edit into form
 	if (is_array($pconfig['zfs_dataset'])) $pconfig['zfs_dataset'] = array_filter($pconfig['zfs_dataset']);
 	// 3 remove whitespaces on input 
@@ -464,7 +465,7 @@ if ($_POST) {
 		$jail['force_blocking'] = $pconfig['force_blocking'];
 		// compress array to string
 		if (!empty( $zfsdataset1 )) { $jail['zfs_datasets'] = implode(";", $zfsdataset1); } else { unset ($jail['zfs_datasets']);}
-		$jail['zfs_enable'] = !empty($pconfig['zfs_enable']) ? true : false;
+		$jail['zfs_enable'] = isset($pconfig['zfs_enable']) ? true : false;
 		$jail['fib'] = $pconfig['fib'];
 		$jail['ports'] = isset( $pconfig['ports'] ) ? true : false ;
 		
@@ -701,9 +702,10 @@ function redirect() { window.location = "extensions_thebrig_fstab.php?uuid=<?=$p
 			<tr id='mounts_separator'><td colspan='2' valign='top' class='listtopic'>Mounts</td></tr>
 				
  			<?php html_checkbox("jail_mount", gettext("mount/umount jail's fs"), $pconfig['jail_mount'], gettext("Enable the jail to automount its fstab file. <b>This is not optional for slim jails.</b> "),false , false, "jail_mount_enable()");?>
- 			<?php for ($i = $config['thebrig']['gl_statfs']; $i <= 2; ) { $combovalues[$i] = $i ; $i++; }  
+ 			<?php for ($i = $config['thebrig']['gl_statfs']; $i <= 2; ) { $combovalues[$i] = $i ;  $i++; } 
  			
- 			html_combobox("statfs", gettext("information about a mounted file system (statfs)"),  $pconfig['statfs'], /*array('2' =>'2','1'=> '1', '0'=> '0')*/ $combovalues , "Choose enforce_statfs. Default value =2. It not allow for jail user mount inside a jail. \"High\" = 1  and \"All\" = 0 values allow mount jail-friendly filesystems  ", false,false);?>
+ 			html_combobox("statfs", gettext("information about a mounted file system (statfs)"),  $pconfig['statfs'], $combovalues , "Choose enforce_statfs. Default value =2. It not allow for jail user mount inside a jail. \"High\" = 1  and \"All\" = 0 values allow mount jail-friendly filesystems  ", false,false);  ?>
+		
 		
  			<?php //html_combobox("devfs_enable", gettext("Enable mount devfs \n <input type=\"button\" onclick=\"helpbox()\" value=\"Help\" />"), $pconfig['devfs_enable'], array('parent' =>'Main devfs','standart'=> 'Standart', 'custom'=> 'With ruleset'), "Choose devfs type", false,false,"devfs_change()");?>
 			
@@ -717,7 +719,7 @@ function redirect() { window.location = "extensions_thebrig_fstab.php?uuid=<?=$p
 			<?php if (FALSE != ($datasets_list = brig_datasets_list())) {
 			html_checkbox("zfs_enable", gettext("Enable mount zfs dataset"), isset($pconfig['zfs_enable']) ? true : false, "", "", " ");
 			html_zfs_box("zfs_dataset", gettext("ZFS dataset, mounted to jail"), $pconfig['zfs_dataset'], $datasets_list, false, false); 
-			} else { echo " <input name='zfs_enable' type='hidden' value='' />";}
+			} else { unset ($pconfig['zfs_enable']);}
 			
 			?>
 			

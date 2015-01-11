@@ -15,7 +15,16 @@ function thebrig_unregister() {
  				unset($config['rc']['postinit']['cmd'][$i]);	// Disable the old startup
  		}	// end for
  	} // end if (is array)
-
+	$i = 0;
+ 	if ( is_array($config['rc']['shutdown'] ) && is_array( $config['rc']['shutdown']['cmd'] ) ) {
+ 		for ($i; $i < count($config['rc']['shutdown']['cmd']); $i++) {
+ 		
+ 		///TODO - please refer into preg_match manual preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred.
+ 		// Construction delete ALL cmd
+ 			if (1 == preg_match('/thebrig_stop\.sh/', $config['rc']['shutdown']['cmd'][$i]))
+ 				unset($config['rc']['shutdown']['cmd'][$i]);	// Disable the old startup
+ 		}	// end for
+ 	} // end if (is array)
  	// remove TheBrig related config and webgui settings - store folder location temporarily
  	$brigroot = $config['thebrig']['rootfolder'];
  	// clears the config variables
