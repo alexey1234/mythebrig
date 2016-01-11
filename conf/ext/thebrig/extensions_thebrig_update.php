@@ -433,7 +433,7 @@ function conf_handler() {
 			if (file_exists ( "/tmp/update_pub.ssl" ) && file_exists("/tmp/update_latest.ssl") ) {
 			// Uses openssl to verify the "latest.ssl" snapshot using the portsnap public key, and then
 			// converts that from an epoch second to a usable date.
-				exec (  $brig_root . "conf/bin/openssl rsautl -pubin -inkey "
+				exec ( "openssl rsautl -pubin -inkey "
 				. "/tmp/update_pub.ssl -verify < "
 				. "/tmp/update_latest.ssl  > /tmp/update.tag" );
 				$EOL_date= exec( "date -j -r `cat /tmp/update.tag  | cut -f 6 -d '|'`");
