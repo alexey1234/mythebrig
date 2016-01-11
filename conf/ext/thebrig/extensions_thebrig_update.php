@@ -1,7 +1,23 @@
 <?php
+/*
+	file: extensions_thebrig_update.php
+	
+	Copyright 2012-2015 Matthew Kempe & Alexey Kruglov
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+*/
 require("auth.inc");
 require("guiconfig.inc");
-require_once("ext/thebrig/lang.inc");
 require_once("ext/thebrig/functions.inc");
 
 if ( !isset( $config['thebrig']['rootfolder']) || !is_dir( $config['thebrig']['rootfolder']."work" )) {
@@ -25,21 +41,28 @@ if ($brig_update_ready == 0 ){
 	$brig_update_db = $brig_root . "conf/db/freebsd-update/";
 
 	// See my above comments for why the if() that used to live here is no longer needed
-	if (!is_array($config['thebrig']['content'])) {$input_errors[] = "Not defined any jail. I don't know what you want "; goto out;}
-	array_sort_key($config['thebrig']['content'], "jailno");
-	$a_jail = &$config['thebrig']['content'];
-	$pconfig['updatecron'] = isset( $config['thebrig']['updatecron'] ) ;
+	if (!is_array($config['thebrig']['content'])) {
+		// THis is impossible, as the link to this page is dead if there are no jails. However, if the user types this
+		// URL into the address bar manually, then I suppose they might be able to cause some trouble. I modified the 
+		// if ($_POST) to skip if there are no jails defined.
+		$input_errors[] = _THEBRIG_JAILSNODEFINED; 
+	}
+	else {
+		array_sort_key($config['thebrig']['content'], "jailno");
+		$a_jail = &$config['thebrig']['content'];
+		$pconfig['updatecron'] = isset( $config['thebrig']['updatecron'] ) ;
 
 
-	$basedir_hash = exec ( "echo " . $a_jail[0]['jailpath'] . " | sha256 -q" );
-	if ( is_link ( $a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) ) {
+		$basedir_hash = exec ( "echo " . $a_jail[0]['jailpath'] . " | sha256 -q" );
+		if ( is_link ( $a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) ) {
 		//$input_errors[]=$a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback";
+		}
 	}
 }
 
 // User has clicked a button
-if ($_POST) {
-	unset($input_errors);
+if ($_POST && is_array( $config['thebrig']['content']))  {
+	unset($input_errors);	
 	$pconfig = $_POST;
 	$config_changed = false;		// Keep track if we need to re-write the config
 	$formjails = $_POST['formJails'];
@@ -48,6 +71,7 @@ if ($_POST) {
 		if ( isset ( $config['thebrig']['updatecron'] ) && !isset($_POST['updatecron'] )){
 			//Cron is enabled in the existing config, but not on the form - we need to turn it off
 			$config_changed=true;
+			unset($config['thebrig']['updatecron']);
 			// This will search the existing cronjobs to find the appropriate index to place the portsnap command
 			$i = 0;
 			// Don't want to attempt array operations if there are no cronjobs.
@@ -55,14 +79,15 @@ if ($_POST) {
 				for ($i; $i < count( $config['cron']['job'] ); $i++) {
 					// This loops through all the cron job entries, and if it finds thebrig_ports_cron.php (placed by hand),
 					// it will update the entry to reflect the new location by breaking out of the for loop at the correct index.
-					if ( 1 == preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
+					if ( 1 === preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
 						unset($config['cron']['job'][$i]);
 				} // end of for loop
 			} // end of array if statment
 		} // end of turning off cron
-		elseif ( !isset ( $config['thebrig']['updatecron'] ) && isset($pconfig['updatecron'] ) ) {
+		elseif ( !isset ( $config['thebrig']['updatecron'] ) && isset($_POST['updatecron'] ) ) {
 			// Cron is disabled in the existing config, but selected on the form - we need to turn it on
 			$config_changed=true;
+			$config['thebrig']['updatecron'] = true;
 			$brig_cron_job = array();
 			// Build the cronjob we want to insert.
 			$brig_cron_job['enable']="";
@@ -88,7 +113,7 @@ if ($_POST) {
 				for ($i; $i < count( $config['cron']['job'] ); $i++) {
 					// This loops through all the cron job entries, and if it finds thebrig_ports_cron.php (placed by hand),
 					// it will update the entry to reflect the new location by breaking out of the for loop at the correct index.
-					if ( 1 == preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
+					if ( 1 === preg_match('/thebrig_update_cron\.php/', $config['cron']['job'][$i]['command']))
 						break;
 				} // end of for loop
 			} // end of array if statment
@@ -96,7 +121,8 @@ if ($_POST) {
 			$config['cron']['job'][$i] = $brig_cron_job;
 		} // end of "turning on" cron
 		// Store the fact that we have the cronjob. If we haven't made a change, this won't matter, because the write won't occur.
-		$config['thebrig']['updatecron'] = isset( $pconfig['updatecron'] );
+		// $config['thebrig']['updatecron'] = isset( $pconfig['updatecron'] );
+		else {}
 	} // end of "clicked submit"
 
 	$base_selected = false;
@@ -104,7 +130,7 @@ if ($_POST) {
 	$template_selected = false;
 	if (isset($pconfig['update_op']) && $pconfig['update_op'] ){
 		if ( ! is_array( $formjails) )
-			$input_errors[] = gettext("You need to select a jail to carry out operations on!");
+			$input_errors[] = _THEBRIG_NEEDSELECT;
 		else {
 			// We now need to check which jails were selected for update operations
 			foreach ( $formjails as $job_jail ){
@@ -129,16 +155,16 @@ if ($_POST) {
 				}
 				// We are attempting to install updates that don't exist
 				// Check for the existence of the -install link 
-				if ( ! is_link ( $my_jail['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-install" ) && $pconfig['update_op'] == "Install") {
+				if ( ! is_link ( $my_jail['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-install" ) && $pconfig['update_op'] == _THEBRIG_INSTALL_BUTTON ) {
 				// We are attempting to rollback a jail that can't be
-					$input_errors[] = "The jail named " . $my_jail['jailname'] . " does not have any updates ready for installation. <br>Please run 'fetch' for this jail.";
+					$input_errors[] = _THEBRIG_NOUPDATESREADY;
 					break;
 				}
 				
 				// Check for a rollback
 				if ( ! is_link ( $my_jail['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) && $pconfig['update_op'] == "Rollback") {
 					// We are attempting to rollback a jail that can't be
-					$input_errors[] = "The jail named " . $my_jail['jailname'] . " cannot have its installation rolled back. <br>Sorry.";
+					$input_errors[] = _THEBRIG_NOROLLBACK;
 					break;
 				}
 				
@@ -164,7 +190,7 @@ if ($_POST) {
 				$basedir_hash = exec ( "echo " . $basejail . " | sha256 -q" );
 				// Check for the existence of the -install link - if it's there, and we want to install, then it's valid. Likewise,
 				// if there is a rollback link, and we want to do that, then we should allow the action to take place.
-				if (( is_link ( $brig_update_db . $basedir_hash . "-install" ) && $pconfig['update_op'] == "Install") 
+				if (( is_link ( $brig_update_db . $basedir_hash . "-install" ) && $pconfig['update_op'] == _THEBRIG_INSTALL_BUTTON ) 
 					|| (is_link ( $my_jail['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) && $pconfig['update_op'] == "Rollback") ){
 					// We are attempting to rollback a jail that can't be
 					$basejail = $config['thebrig']['basejail'];
@@ -187,28 +213,32 @@ if ($_POST) {
 				// First calculate the unique hash for the install/rollback links
 				$basedir_hash = exec ( "echo " . $template_dir . " | sha256 -q" );
 				// Check for the existence of the -install link
-				if ( ! is_link ( $template_dir . "var/db/freebsd-update/" . $basedir_hash . "-install" ) && $pconfig['update_op'] == "Install") {
+				if ( ! is_link ( $template_dir . "var/db/freebsd-update/" . $basedir_hash . "-install" ) && $pconfig['update_op'] == _THEBRIG_INSTALL_BUTTON ) {
 					// We are attempting to install a jail that doesn't have any updates pending
-					$input_errors[] = "The TEMPLATE jail does not have any updates ready for installation. <br>Please run 'fetch' for this jail.";
+					$input_errors[] = _THEBRIG_NOUPDATESREADY_TEMPLATE;
 				}
 				
 				// Check for a rollback
 				if ( ! is_link ( $template_dir . "var/db/freebsd-update/" . $basedir_hash . "-rollback" ) && $pconfig['update_op'] == "Rollback") {
 					// We are attempting to rollback a jail that can't be
-					$input_errors[] = "The TEMPLATE jail cannot have its installation rolled back. <br>Sorry.";
+					$input_errors[] = _THEBRIG_NOROLLBACK_TEMPLATE;
 				}
 			}
 			
 			$response = 0;
-			if ( count ( $input_errors ) == 0)
-				$response = thebrig_update($basedir_list, $workdir_list , $conffile_list, $pconfig['update_op']);
-			else 
-				$input_errors[] = "No action was taken because of the above errors.";
+			if ( count ( $input_errors ) == 0) {
+				$response = thebrig_update($basedir_list, $workdir_list , $conffile_list, $pconfig['update_op']); 
+			}
+			else {
+				$input_errors[] = _THEBRIG_ABOVEERROR; 
+			}
 			
-			if ( $response == 1)
-				$input_errors[] = "Something bad happened while attempting to prep for the update operation";
-			elseif ( $response == 2 )
-			$input_errors[] = "Something bad happened while attempting to return Nas4Free to its previous state";
+			if ( $response == 1) {
+				$input_errors[] = _THEBRIG_NOPREPARE_UPDATE;
+			}
+			elseif ( $response == 2 ) {
+				$input_errors[] = _THEBRIG_NORETURN_UPDATE;
+			}
 		} // enf of else
 	} // end of update_op
 
@@ -218,7 +248,8 @@ if ($_POST) {
 		// Now we have to do the accounting to make sure the config reflects all we know about the installation, if we carried out a
 		// "install" or "fetch & install" operation. We do this by trusting the tag if the "rollback" is present in the working directory,
 		// indicating installation success
-		if ( $pconfig['update_op'] == "Install" ) {
+		if ( $pconfig['update_op'] == _THEBRIG_INSTALL_BUTTON ) {
+		file_put_contents('/tmp/install.txt',  $pconfig['update_op'] . ":= "._THEBRIG_INSTALL_BUTTON);
 			// Need to cycle through all the jails (again)
 			foreach ( $a_jail as &$my_jail ) {
 				// This if gets entered the jail is checked and is fullsized, OR is thin and we selected to upgrade them all
@@ -276,7 +307,6 @@ if ($_POST) {
 		$savemsg = get_std_save_message($retval);
 	} // end of no input errors
 } // end of POST
-out:
 // Uses the global fbegin include
 include("fbegin.inc");
 
@@ -352,7 +382,7 @@ function conf_handler() {
 				<li class="tabinact"><a href="extensions_thebrig_tarballs.php"><span><?=_THEBRIG_MAINTENANCE;?>
 					</span> </a>
 				</li>
-				<li class="tabinact"><a href="extensions_thebrig_log.php"><span><?=gettext("Log");?></span></a></li>
+				<li class="tabinact"><a href="extensions_thebrig_log.php"><span><?=_THEBRIG_LOG;?></span></a></li>
 			</ul>
 		</td>
 	</tr>
@@ -364,6 +394,7 @@ function conf_handler() {
 				</a></li>
 				<li class="tabinact"><a href="extensions_thebrig_ports.php"><span><?=_THEBRIG_PORTS;?>
 					</span> </a></li>
+				<li class="tabinact"><a href="extensions_thebrig_manager.php"><span><?=_THEBRIG_MANAGER;?></span></a></li>
 			</ul>
 		</td>
 	</tr>
@@ -376,13 +407,13 @@ function conf_handler() {
 				<table width="100%" border="0" cellpadding="6" cellspacing="0">
 		<?php if ( $brig_update_ready == 2 ) {
 			// The necessary binaries for all the update tasks could not be found in any jail.
-			html_titleline(gettext("ERROR!"));
-			html_text($confconv, gettext("Unable to Continue"),"In order to begin configuration and update tasks for freebsd-update, you need to have at least one configured and filled jail!");
+			html_titleline(_THEBRIG_ERROR);
+			html_text($confconv, _THEBRIG_UNABLECONTINUE,_THEBRIG_UNABLECONTINUE_EXPL3);
 		}
 		elseif ( $brig_update_ready == 1 ){
 		// The necessary binaries for all the update tasks could not be copied into thebrig's working directory.
-			html_titleline(gettext("ERROR! ... Like, a HUGE error!"));
-			html_text($confconv, gettext("Unable to Continue"),"For some reason, Nas4Free cannot be prepared for update tasks. This is highly suspect, as the copying was attempted by root.");
+			html_titleline(_THEBRIG_HUGEERROR);
+			html_text($confconv, _THEBRIG_UNABLECONTINUE,_THEBRIG_UNABLECONTINUE_EXPL4);
 		}
 		else {
 			// All the binaries were found, and able to be moved into thebrig's working directory.
@@ -391,32 +422,39 @@ function conf_handler() {
 			$my_arch = exec ( "uname -m");
 			$my_rel = exec ( "uname -r");
 			$my_rel_cut = exec ("uname -r | cut -d- -f1-2" ) ;     // Obtain the current kernel release
-			exec ( "fetch -o /tmp/latest.ssl http://update.freebsd.org/" . $my_rel_cut . "/". $my_arch ."/latest.ssl");
-			exec ( "fetch -o /tmp/pub.ssl http://update.freebsd.org/" . $my_rel_cut . "/". $my_arch ."/pub.ssl");
+			$release_update_path = "http://update.freebsd.org/" . $my_rel_cut . "/". $my_arch;
+			// Connectivity test
+			$connected = @fsockopen("update.freebsd.org", 80); 
+			if ( $connected ) {
+				fclose($connected);
+				exec ( "fetch -o /tmp/update_latest.ssl ". $release_update_path ."/latest.ssl");
+				exec ( "fetch -o /tmp/update_pub.ssl ". $release_update_path ."/pub.ssl");
+			}			
+			if (file_exists ( "/tmp/update_pub.ssl" ) && file_exists("/tmp/update_latest.ssl") ) {
 			// Uses openssl to verify the "latest.ssl" snapshot using the portsnap public key, and then
 			// converts that from an epoch second to a usable date.
-			exec (  $brig_root . "conf/bin/openssl rsautl -pubin -inkey "
-			. "/tmp/pub.ssl -verify < "
-			. "/tmp/latest.ssl  > /tmp/update.tag" );
-			$EOL_date= exec( "date -j -r `cat /tmp/update.tag  | cut -f 6 -d '|'`");
-			$tag_rel = exec ( "cat /tmp/update.tag | cut -f 3 -d '|'");
-			$tag_patch = exec ( "cat /tmp/update.tag | cut -f 4 -d '|'");
-			//exec ("rm /tmp/latest.ssl"); 	// Get rid of the latest tag
-			//exec ("rm /tmp/pub.ssl"); 	// Get rid of the latest tag
-			//exec ( "rm /tmp/update.tag");
+				exec (  $brig_root . "conf/bin/openssl rsautl -pubin -inkey "
+				. "/tmp/update_pub.ssl -verify < "
+				. "/tmp/update_latest.ssl  > /tmp/update.tag" );
+				$EOL_date= exec( "date -j -r `cat /tmp/update.tag  | cut -f 6 -d '|'`");
+				$tag_rel = exec ( "cat /tmp/update.tag | cut -f 3 -d '|'");
+				$tag_patch = exec ( "cat /tmp/update.tag | cut -f 4 -d '|'");
+				exec ("rm /tmp/latest.ssl"); 	// Get rid of the latest tag
+				exec ("rm /tmp/pub.ssl"); 	// Get rid of the latest tag
+				exec ( "rm /tmp/update.tag");
+			}
+			else { $EOL_date = "N/A"; $tag_rel = "0" ; $tag_patch = "0 -- Unknown - check networking!!"; }
 
-
-			html_titleline(gettext("Update"));
-			html_text($confconv, gettext("Current Status"),gettext("The latest version on the FTP server is: ") . $tag_rel . "-p" . $tag_patch . "<br /><br />" . gettext("The update on the FTP server is valid until: ") . $EOL_date );
-			?>
+			html_titleline(_THEBRIG_UPDATE_BUTTON);
+			html_text($confconv, _THEBRIG_PORTCURRENTSTATUS, _THEBRIG_FBSDVERSION . $tag_rel . "-p" . $tag_patch . "<br /><br />" . _THEBRIG_FBSDVERSION_VALID . $EOL_date );?>
 					<tr>
-						<td width="15%" valign="top" class="vncell"><?=gettext("Cronjob");?>
+						<td width="15%" valign="top" class="vncell"><?=_THEBRIG_PORTCRON;?>
 						</td>
 						<td width="85%" class="vtable"><input name="updatecron"
 							type="checkbox" id="updatecron" value="yes"
-							<?php if (!empty($pconfig['updatecron'])) echo "checked=\"checked\""; ?> />
+							<?php if (!empty($pconfig['updatecron'])) echo " checked=\"checked\""; ?> />
 							<?=_THEBRIG_UPDATE_CRON?> <input id="save" name="save"
-							type="submit" class="formbtn" value="<?=gettext("Save");?>"
+							type="submit" class="formbtn" value="<?=_THEBRIG_SAVE_BUTTON;?>"
 							onClick="return conf_handler();" />
 						</td>
 					</tr>
@@ -424,23 +462,19 @@ function conf_handler() {
 	
 			<?php 	// We have tag meaning we have downloaded & extracted a copy of the tree before - now we just want to update it.
 			html_separator();
-			html_titleline(gettext("Jails"));?>
+			html_titleline(_THEBRIG_JAILS);?>
 					<tr>
-						<td width="5%" valign="top" class="vncell"><?=gettext("Update Operations");?>
+						<td width="5%" valign="top" class="vncell"><?=_THEBRIG_UPDATEOP;?>
 						</td>
-						<td width="95%" class="vtable"><?=gettext( "Please choose which of the following jails should have the update action carried out:" )?><br />
-							<br />
+						<td width="95%" class="vtable"><?=_THEBRIG_UPDATEOP_EXPL;?><br /><br />
 							<table width="100%" border="0" cellpadding="0" cellspacing="0">
 								<tr>
 									<td width="4%" class="listhdrlr">&nbsp;</td>
-									<td width="10%" class="listhdrc"><?=gettext("Name");?></td>
-									<td width="12%" class="listhdrr"><?=gettext("Last Check for Updates");?></td>
-									<td width="19%" class="listhdrc"><?=gettext("Downloaded Version");?>
-									</td>
-									<td width="30%" class="listhdrc"><?=gettext("Files Affected by Pending Update");?>
-									</td>
-									<td width="12%" class="listhdrr"><?=gettext("Installed Version");?>
-									</td>
+									<td width="10%" class="listhdrc"><?=_THEBRIG_TABLE1_TITLE1;?></td>
+									<td width="12%" class="listhdrr"><?=_THEBRIG_UPDATETABLE1;?></td>
+									<td width="19%" class="listhdrc"><?=_THEBRIG_UPDATETABLE2;?></td>
+									<td width="30%" class="listhdrc"><?=_THEBRIG_UPDATETABLE3;?></td>
+									<td width="12%" class="listhdrr"><?=_THEBRIG_UPDATETABLE4;?></td>
 								</tr>
 			<?php $k = 0; for( $k; $k < count ( $a_jail ) ; $k ++ ):
 				if ( file_exists ( $a_jail[$k]['jailpath'] . "/var/db/freebsd-update/tag")){
@@ -477,12 +511,12 @@ function conf_handler() {
 					} // End of there exists file lists
 					else
 						// No file lists exist
-						$file_summary ="No updates pending";
+						$file_summary =_THEBRIG_NOUPDATE;
 				} // end of there is a tag
 				else {
 					$tag_version = "No Tag";
 					$tag_date = "N/A";
-					$file_summary ="No updates pending";
+					$file_summary =_THEBRIG_NOUPDATE;
 				} ?>
 								<tr>
 									<td class="<?=$enable?"listlr":"listlrd";?>"><input
@@ -492,9 +526,12 @@ function conf_handler() {
 									<td class="<?=$enable?"listrc":"listrcd";?>"><?=htmlspecialchars($tag_date);?>&nbsp;</td>
 									<td class="<?=$enable?"listrc":"listrcd";?>"><?=htmlspecialchars($tag_version );?>&nbsp;</td>
 									<td class="<?=$enable?"listr":"listrd";?>"><?=htmlspecialchars( $file_summary);?>&nbsp;</td>
-									<td class="listbg"><?=htmlspecialchars($a_jail[$k]['base_ver']);?>&nbsp;</td>
+									<?php $freebsdversionc = $a_jail[$k]["jailpath"].'bin/freebsd-version -u'; ?>
+									<td class="listbg"><?=htmlspecialchars( exec($freebsdversionc) );?>&nbsp;</td>
+									<!--<td class="listbg"><?=htmlspecialchars($a_jail[$k]['base_ver']);?>&nbsp;</td> -->
 								</tr>
 				<?php endfor; 
+				if ( is_dir( $config['thebrig']['template'] . "/var/run" ) ) {
 				if ( file_exists ( $config['thebrig']['template'] . "/var/db/freebsd-update/tag")){
 				// Extract the most recent tag's date, and convert from Unix epoch to a readable date
 					$tag_full = explode( "|", file_get_contents($config['thebrig']['template'] . "/var/db/freebsd-update/tag")) ;
@@ -514,12 +551,12 @@ function conf_handler() {
 					} // End of there exists file lists
 					else
 						// No file lists exist
-						$file_summary ="No updates pending";
+						$file_summary =_THEBRIG_NOUPDATE;
 				} // end of there is a tag
 				else {
 					$tag_version = "No Tag";
 					$tag_date = "N/A";
-					$file_summary ="No updates pending";
+					$file_summary =_THEBRIG_NOUPDATE;
 				}?>
 							<tr>
 									<td class="<?=$enable?"listlr":"listlrd";?>"><input
@@ -531,50 +568,48 @@ function conf_handler() {
 									<td class="<?=$enable?"listr":"listrd";?>"><?=htmlspecialchars( $file_summary);?>&nbsp;</td>
 									<td class="listbg"><?=htmlspecialchars($config['thebrig']['template_ver']);?>&nbsp;</td>
 								</tr>
-							</table> <br> <b><?=gettext("Please note: ")?> </b> <?=gettext("Selecting a thin jail for any update operation will mandate that all other thin jails be updated as well.")?>
-					
+				<?} // This is the end of the row test for the TEMPLATE ?>
+							</table> <br> <?=_THEBRIG_UPDATETABLE_NOTE;?>
 					</tr>
+					
 					<tr>
-						<td width="22%" valign="top" class="vncell">Fetch the
-							Updates&nbsp;</td>
-						<td width="78%" class="vtable"><?=gettext("Click below to perform an 'on-demand' fetch for the selected jails.");?><br>
+						<td width="22%" valign="top" class="vncell"><?=_THEBRIG_UPDATE_FETCH;?></td>
+						<td width="78%" class="vtable"><?=_THEBRIG_UPDATE_FETCHEXPL;?><br>
 							<div id="submit_x">
 								<input id="fupdate" name="update_op" type="submit"
-									class="formbtn" value="<?=gettext("Fetch");?>"
+									class="formbtn" value="<?=_THEBRIG_FETCH_BUTTON;?>"
 									onClick="return conf_handler();" /><br />
 							</div>
 						</td>
 					</tr>
 
 					<tr>
-						<td width="22%" valign="top" class="vncell">Install the
-							Updates&nbsp;</td>
-						<td width="78%" class="vtable"><?=gettext("Click below to install the pending update to the selected jail(s).");?><br />
+						<td width="22%" valign="top" class="vncell"><?=_THEBRIG_UPDATE_INSTALL;?></td>
+						<td width="78%" class="vtable"><?=_THEBRIG_UPDATE_INSTALLEXPL;?><br />
 							<div id="submit_x">
-								<input id="update" name="update_op" type="submit"
-									class="formbtn" value="<?=gettext("Install");?>"
+								<input id="update" name="update_op" type="submit" form="iform"
+									class="formbtn" value="<?=_THEBRIG_INSTALL_BUTTON;?>"
 									onClick="return conf_handler();" /><br />
 							</div>
 						</td>
 				<?php html_separator();
-				html_titleline(gettext("Update Details"));
+				html_titleline(_THEBRIG_UPDATE_DETAILS);
 				// Build an array with the keys as the jail uuid, and with the value as the jail's name
 				$jail_names = array();
 				foreach ( $a_jail as $one_jail){
 					$jail_names[$one_jail['uuid']]=$one_jail['jailname'];}
 				$jail_names['00000000-0000-0000-0000-000000000000']="TEMPLATE";
-				html_combobox("jail_name", gettext("Jail Name"), $pconfig['type'], $jail_names, gettext("Choose jail to view more information regarding a pending update."), "","","");?>
+				html_combobox("jail_name", _THEBRIG_TABLE1_TITLE1, $pconfig['type'], $jail_names, _THEBRIG_UPDATE_DETAILS_EXPL, "","","");?>
 				<?php $i = 0; for( $i; $i < count ( $a_jail ) ; $i ++ ): 
 					$added_list = $added_contents; ?>
 					<tr id="<?echo $a_jail[$i]['uuid']; ?>" class="container">
-						<td width="5%" valign="top" class="vncell"><?=gettext("Impact of Update");?>
-						</td>
+						<td width="5%" valign="top" class="vncell"><?=_THEBRIG_UPDATE_DETAILS1;?></td>
 						<td width="95%" class="vtable">
 							<table width="100%" border="0" cellpadding="0" cellspacing="0">
 								<tr>
-									<td width="28%" class="listhdrlr"><?=gettext("Added");?></td>
-									<td width="28%" class="listhdrr"><?=gettext("Updated");?></td>
-									<td width="28%" class="listhdrr"><?=gettext("Removed");?></td>
+									<td width="28%" class="listhdrlr"><?=_THEBRIG_UPDATE_DETAILS2;?></td>
+									<td width="28%" class="listhdrr"><?=_THEBRIG_UPDATE_DETAILS3;?></td>
+									<td width="28%" class="listhdrr"><?=_THEBRIG_UPDATE_DETAILS4;?></td>
 								</tr>
 
 								<tr>
@@ -589,14 +624,14 @@ function conf_handler() {
 					<?php endfor;?>
 
 					<tr id="<?echo '00000000-0000-0000-0000-000000000000'; ?>" class="container">
-						<td width="5%" valign="top" class="vncell"><?=gettext("Impact of Update");?>
+						<td width="5%" valign="top" class="vncell"><?=_THEBRIG_UPDATE_DETAILS1;?>
 						</td>
 						<td width="95%" class="vtable">
 							<table width="100%" border="0" cellpadding="0" cellspacing="0">
 								<tr>
-									<td width="28%" class="listhdrlr"><?=gettext("Added");?></td>
-									<td width="28%" class="listhdrr"><?=gettext("Updated");?></td>
-									<td width="28%" class="listhdrr"><?=gettext("Removed");?></td>
+									<td width="28%" class="listhdrlr"><?=_THEBRIG_UPDATE_DETAILS2;?></td>
+									<td width="28%" class="listhdrr"><?=_THEBRIG_UPDATE_DETAILS3;?></td>
+									<td width="28%" class="listhdrr"><?=_THEBRIG_UPDATE_DETAILS4;?></td>
 								</tr>
 
 								<tr>

@@ -1,6 +1,41 @@
 <?php
 /* 
-      gui_addons.php
+    gui_addons.inc
+
+	Copyright (c) 2015 Matt Kempe & Alexey Kruglov
+	All rights reserved. 
+
+	Part of NAS4Free (http://www.nas4free.org).
+	Copyright (c) 2012-2015 The NAS4Free Project <info@nas4free.org>.
+	All rights reserved.
+
+	Portions of freenas (http://www.freenas.org).
+	Copyright (c) 2005-2011 by Olivier Cochard <olivier@freenas.org>.
+	All rights reserved.
+
+	Redistribution and use in source and binary forms, with or without
+	modification, are permitted provided that the following conditions are met:
+
+	1. Redistributions of source code must retain the above copyright notice, this
+	   list of conditions and the following disclaimer.
+	2. Redistributions in binary form must reproduce the above copyright notice,
+	   this list of conditions and the following disclaimer in the documentation
+	   and/or other materials provided with the distribution.
+
+	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+	DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
+	ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+	(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+	LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+	ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+	The views and conclusions contained in the software and documentation are those
+	of the authors and should not be interpreted as representing official policies,
+	either expressed or implied, of the NAS4Free Project.
 
 This file content specific subroutines for Thebrig gui.
 I use it differet from functions because it need for gui only, but functions we use from cli
@@ -89,9 +124,10 @@ class HTMLBrigCommandBox extends HTMLBaseControl {
 		echo "    </script>\n";
 		echo "    <table><tr><td width='40%' color='red'><center><b>In jail</b></center>\n";
 		echo "    <select name='{$ctrlname}[]' class='formfld' id='{$ctrlname}' multiple='multiple'  style='width: 350px' onchange='onchange_{$ctrlname}()'>\n";
+		if (isset($value) ){
 		foreach ($value as $valuek => $valuev) {
 			echo "      <option value='{$valuev}' {$optparam}>{$valuev}</option>\n";
-		}
+		}}
 		echo "    </select>\n";
 		echo "    <input name='{$ctrlname}deletebtn' type='button' class='formbtn' id='{$ctrlname}deletebtn' value='".htmlspecialchars(gettext("Delete"), ENT_QUOTES)."' onclick='onclick_delete_{$ctrlname}()' /><br />\n";
 		echo "    </td>\n";
@@ -189,9 +225,10 @@ class HTMLBrigdevfs extends HTMLBaseControl {
 		echo "    </script>\n";
 		echo "    <table><tr><td width='40%' color='red'><center><b>In jail</b></center>\n";
 		echo "    <select name='{$ctrlname}[]' class='formfld' id='{$ctrlname}' multiple='multiple' size='4' style='width: 350px' onchange='onchange_{$ctrlname}()'>\n";
+		if (isset($value)) {
 		foreach ($value as $valuek => $valuev) {
 			echo "      <option value='{$valuev}' {$optparam}>{$valuev}</option>\n";
-		}
+		}}
 		echo "    </select><br />\n";
 		echo "    <input name='{$ctrlname}deletebtn' type='button' class='formbtn' id='{$ctrlname}deletebtn' value='".htmlspecialchars(gettext("Delete"), ENT_QUOTES)."' onclick='onclick_delete_{$ctrlname}()' />\n";
 		echo "    </td>\n";
@@ -283,9 +320,10 @@ class HTMLBrigNetworkBox extends HTMLBaseControl {
 		echo "    </script>\n";
 		echo "    <table><tr><td width='40%' color='red'><center><b>In jail</b></center>\n";
 		echo "    <select name='{$ctrlname}[]' class='formfld' id='{$ctrlname}' multiple='multiple'  style='width: 350px' onchange='onchange_{$ctrlname}()'>\n";
+		if (isset($value)) {
 		foreach ($value as $valuek => $valuev) {
 			echo "      <option value='{$valuev}' {$optparam}>{$valuev}</option>\n";
-		}
+		}}
 		echo "    </select>\n";
 		echo "    <input name='{$ctrlname}deletebtn' type='button' class='formbtn' id='{$ctrlname}deletebtn' value='".htmlspecialchars(gettext("Delete"), ENT_QUOTES)."' onclick='onclick_delete_{$ctrlname}()' /><br />\n";
 		echo "    </td>\n";
@@ -364,7 +402,7 @@ class HTMLOptionsBox extends HTMLBaseControl {
 		echo "    </script>\n";
 		echo "    <table><tr><td width='40%' color='red'><center><b>In jail</b></center>\n";
 		echo "    <select name='{$ctrlname}[]' class='formfld' id='{$ctrlname}' multiple='multiple' size='8' style='width: 350px' >\n";
-		if (is_array($value)) { foreach ($value as $valuek => $valuev) {
+		if (isset($value)) { foreach ($value as $valuek => $valuev) {
 			echo "      <option value='{$valuev}' >{$valuev}</option>\n";
 				      }
 			}
@@ -475,9 +513,10 @@ class HTMLzfs_set extends HTMLBaseControl {
 		echo "    </script>\n";
 		echo "    <table><tr><td width='40%' color='red'><center><b>In jail</b></center>\n";
 		echo "    <select name='{$ctrlname}[]' class='formfld' id='{$ctrlname}' multiple='multiple'  style='width: 350px' onchange='onchange_{$ctrlname}()'>\n";
+		if (isset($value)) {
 		foreach ($value as $valuek => $valuev) {
 			echo "      <option value='{$valuev}' {$optparam}>{$valuev}</option>\n";
-		}
+		}}
 		echo "    </select>\n";
 		echo "    <input name='{$ctrlname}deletebtn' type='button' class='formbtn' id='{$ctrlname}deletebtn' value='".htmlspecialchars(gettext("Delete"), ENT_QUOTES)."' onclick='onclick_delete_{$ctrlname}()' /><br />\n";
 		echo "    </td>\n";
@@ -489,10 +528,10 @@ class HTMLzfs_set extends HTMLBaseControl {
 		echo "    <td width='40%'><table><tr><td width='50%'><center>datasets</center></td><td>Jail's mount point</td></tr>\n";
 		
 		echo "    <tr><td width='40%'><select name='{$ctrlname}filetype' class='formfld' id='{$ctrlname}filetype' >\n ";
-		
+		if (isset($value)){
 		foreach ($options as $optionsv) {
 		echo "      <option value='{$optionsv[2]}' {$optparam}>{$optionsv[2]}</option>\n";
-			}
+			}}
 		
 		
 		echo "    </select></td><td><input name='{$ctrlname}data' type='text' class='formfld' id='{$ctrlname}data' size='30' value='' /></td></tr></table>\n";
