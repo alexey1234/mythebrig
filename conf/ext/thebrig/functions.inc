@@ -227,31 +227,25 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 		$k = 0;
 		for ( $k ; $k < count ($dest_dir ); $k++ ){
 
-			$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/freebsd-update -d " . $work_dir[$k] . " -f " . $conf_file[$k] . " -b " . $dest_dir[$k]. " --not-running-from-cron";
-			$command_suffix = "--not-running-from-cron >>" . $dest_dir[$k]."update.log";
-			// The prep operation was successful
-
-			if ( !is_dir($work_dir[$k]) )
-
-				exec("mkdir -p " . $work_dir[$k] );
-$output = array();
+			$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/freebsd-update -d " . $work_dir[$k] . " -f " . $conf_file[$k] . " -b " . $dest_dir[$k];
+			
+			if ( !is_dir($work_dir[$k]) )  exec("mkdir -p " . $work_dir[$k] );
+			$output = array();
 			switch ( $action ){
 				case _THEBRIG_FETCH_BUTTON:
 					// Fetch only
-					$command_fetch= $command_prefix . " fetch";
-					
+					$command_fetch= $command_prefix . " --not-running-from-cron fetch";
 					cmd_exec($command_fetch, $output);
-					
 					break;
 				case _THEBRIG_INSTALL_BUTTON:
 					// Update
-					$command_update= $command_prefix . " install";
+					$command_update= $command_prefix . " --not-running-from-cron install";
 					cmd_exec($command_update, $output);
 					break;
 				case "Fetch & Install":
 					// Install --> fetch & extract
-					$command_fetch= $command_prefix . " fetch install";
-					mwexec($command_fetch );
+					$command_fetch= $command_prefix . " --not-running-from-cron fetch install";
+					cmd_exec($command_fetch, $output);
 					break;
 				case "Cron":
 					// Cron
@@ -277,10 +271,7 @@ $output = array();
 function thebrig_portsnap ( $ports_dir , $work_dir , $conf_file , $action ) {
 	global $config;
 	// First run the update tasks to make those binaries available to Nas4Free
-	if ( thebrig_update_config ( true ) == true ){
-		return 1; // If update_config returns anything other than a 0, there was a problem
-	}
-	else {
+	
 		$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/portsnap -d " . $work_dir . " -f " . $conf_file . " -p " . $ports_dir;
 		// The prep operation was successful
 		if (!is_dir($ports_dir))
@@ -291,23 +282,22 @@ function thebrig_portsnap ( $ports_dir , $work_dir , $conf_file , $action ) {
 		switch ( $action ){
 			case "Fetch":
 				// Fetch only
-				$command_fetch= $command_prefix . " fetch";
+				$command_fetch= $command_prefix . " --interactive fetch";
 				exec($command_fetch, $output);
 				break;
 			case _THEBRIG_UPDATE_BUTTON:
 				// Update
-				$command_update= $command_prefix . " update";
+				$command_update= $command_prefix . " --interactive update";
 				exec($command_update);
 				break;
 			case _THEBRIG_FETCHEXTRACT_BUTTON:
 				// Install --> fetch & extract
-				$command_fetch= $command_prefix . " fetch extract";
-				file_put_contents ('/tmp/portscommand.txt', $command_fetch);
-				exec($command_fetch );
+				$command_fetch= $command_prefix . " --interactive fetch extract";				
+				exec($command_fetch,$output );				
 				break;
 			case _THEBRIG_FETCHUPDATE_BUTTON:
 				// Update --> fetch & update
-				$command_fetch= $command_prefix . " fetch update";
+				$command_fetch= $command_prefix . " --interactive fetch update";
 				mwexec($command_fetch);
 				break;
 			case "Cron":
@@ -318,45 +308,8 @@ function thebrig_portsnap ( $ports_dir , $work_dir , $conf_file , $action ) {
 				
 		}
 		
-		// Cleanup Nas4Free and return it to its previous state
-		if ( thebrig_update_config ( false ) == true ){
-			return 2; // if the cleanup returns anything other than 0, there was a problem.
-		}
-	}
 	return 0;
 }
-
-
-
-// Function name: 	thebrig_update_config
-// Inputs: 			setup			boolean value, true indicating we are setting up for update operations,
-//									false indicating we are cleaning up from them
-// Outputs: 		success			integer value, 0 indicating success, 1 indicating there was some sort of problem
-//									with the preparations
-// Description:		This function takes the necessary steps to prepare the Nas4Free host to 
-function thebrig_update_config ( $setup ) {
-	global $config;
-	$brig_root = $config['thebrig']['rootfolder'];	
-	return 0;
-}// end of function
-
-
-// Function name: 	thebrig_update_prep
-// Inputs: 			none
-// Outputs: 		success			integer value, 0 indicating success, 1 if there was a problem copying any of the
-//									files, or 2 if there are no jails configured
-// Description:		This function first checks if any of the files needed by takes the necessary steps to copy the files needed to perform some of the update tasks
-// 					to the /conf location.
-function thebrig_update_prep (  ) {
-	global $config;
-	
-	$brig_root = $config['thebrig']['rootfolder'];
-	$base_root = $config['thebrig']['basejail']['folder'];
-
-	return 0;
-} // end of function
-
-
 
 // Function name: 	thebrig_split_world
 // Inputs: 			destination			string containing the jail's location
