@@ -227,24 +227,26 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 		$k = 0;
 		for ( $k ; $k < count ($dest_dir ); $k++ ){
 
-			$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/freebsd-update -d " . $work_dir[$k] . " -f " . $conf_file[$k] . " -b " . $dest_dir[$k];
+			$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/freebsd-update -d " . $work_dir[$k] . " -f " . $conf_file[$k] . " -b " . $dest_dir[$k]. " --not-running-from-cron";
 			$command_suffix = "--not-running-from-cron >>" . $dest_dir[$k]."update.log";
 			// The prep operation was successful
 
 			if ( !is_dir($work_dir[$k]) )
 
 				exec("mkdir -p " . $work_dir[$k] );
-
+$output = array();
 			switch ( $action ){
 				case _THEBRIG_FETCH_BUTTON:
 					// Fetch only
-					$command_fetch= $command_prefix . " fetch " .$command_suffix;
-					exec($command_fetch);
+					$command_fetch= $command_prefix . " fetch";
+					
+					cmd_exec($command_fetch, $output);
+					
 					break;
 				case _THEBRIG_INSTALL_BUTTON:
 					// Update
 					$command_update= $command_prefix . " install";
-					exec($command_update);
+					cmd_exec($command_update, $output);
 					break;
 				case "Fetch & Install":
 					// Install --> fetch & extract
@@ -261,7 +263,7 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 
 		} // end of for loop
 		
-	return 0;
+	return $output;
 }
 
 // Function name: 	thebrig_portsnap
@@ -290,7 +292,7 @@ function thebrig_portsnap ( $ports_dir , $work_dir , $conf_file , $action ) {
 			case "Fetch":
 				// Fetch only
 				$command_fetch= $command_prefix . " fetch";
-				exec($command_fetch);
+				exec($command_fetch, $output);
 				break;
 			case _THEBRIG_UPDATE_BUTTON:
 				// Update

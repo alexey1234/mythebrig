@@ -1946,7 +1946,7 @@ fetch_create_manifest () {
 		echo "as part of updating to ${RELNUM}-p${RELPATCHNUM}:"
 		cat files.removed
 	fi | $PAGER
-	rm files.removed
+	#rm files.removed
 
 	# Report added files, if any
 	if [ -s files.added ]; then
@@ -1955,7 +1955,7 @@ fetch_create_manifest () {
 		echo "as part of updating to ${RELNUM}-p${RELPATCHNUM}:"
 		cat files.added
 	fi | $PAGER
-	rm files.added
+	#rm files.added
 
 	# Report updated files, if any
 	if [ -s files.updated ]; then
@@ -1965,7 +1965,7 @@ fetch_create_manifest () {
 
 		cat files.updated
 	fi | $PAGER
-	rm files.updated
+	#rm files.updated
 
 	# Create a directory for the install manifest.
 	MDIR=`mktemp -d install.XXXXXX` || return 1
