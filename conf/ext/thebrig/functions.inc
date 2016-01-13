@@ -228,14 +228,20 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 		for ( $k ; $k < count ($dest_dir ); $k++ ){
 
 			$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/freebsd-update -d " . $work_dir[$k] . " -f " . $conf_file[$k] . " -b " . $dest_dir[$k];
-			
-			if ( !is_dir($work_dir[$k]) )  exec("mkdir -p " . $work_dir[$k] );
+			$command_suffix = "--not-running-from-cron >>" . $dest_dir[$k]."update.log";
+			// The prep operation was successful
+
+			if ( !is_dir($work_dir[$k]) )
+
+				exec("mkdir -p " . $work_dir[$k] );
 			$output = array();
 			switch ( $action ){
 				case _THEBRIG_FETCH_BUTTON:
 					// Fetch only
 					$command_fetch= $command_prefix . " --not-running-from-cron fetch";
+					
 					cmd_exec($command_fetch, $output);
+					
 					break;
 				case _THEBRIG_INSTALL_BUTTON:
 					// Update
