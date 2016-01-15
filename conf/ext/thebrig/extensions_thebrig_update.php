@@ -46,13 +46,13 @@ unset ($response);
 		//$input_errors[]=$a_jail[0]['jailpath'] . "var/db/freebsd-update/" . $basedir_hash . "-rollback";
 		
 	}
-	else {
+	} else {
 		// THis is impossible, as the link to this page is dead if there are no jails. However, if the user types this
 		// URL into the address bar manually, then I suppose they might be able to cause some trouble. I modified the 
 		// if ($_POST) to skip if there are no jails defined.
 		$input_errors[] = _THEBRIG_JAILSNODEFINED; 
 		}
-	}
+	
 
 
 // User has clicked a button
