@@ -136,8 +136,8 @@ function thebrig_populate ($new_location, $old_location)
 	} // end if (is array)
 	// update the value of the shutdown command.
 	$config['rc']['shutdown']['cmd'][$i] = "/bin/sh {$new_location}conf/bin/thebrig_stop.sh";
-	
-	if ( ! copy ( $config['thebrig']['rootfolder']."conf/bin/jail.sh", "/etc/rc.d/thebrig"))  
+	unlink_if_exists("/etc/rc.d/thebrig");
+	if ( ! symlink ( $config['thebrig']['rootfolder']."conf/bin/jail.sh", "/etc/rc.d/thebrig"))  
 	{ exec ("logger Failed copy rc script");} 
 	chmod("/etc/rc.d/thebrig", 0744);
 	
@@ -228,7 +228,7 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 		for ( $k ; $k < count ($dest_dir ); $k++ ){
 
 			$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/freebsd-update -d " . $work_dir[$k] . " -f " . $conf_file[$k] . " -b " . $dest_dir[$k];
-			$command_suffix = "--not-running-from-cron >>" . $dest_dir[$k]."update.log";
+			
 			// The prep operation was successful
 
 			if ( !is_dir($work_dir[$k]) )
@@ -258,14 +258,32 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 					$command_cron= $command_prefix . " cron";
 					mwexec($command_cron);
 					break;
-
+				case "Upgrade":
+					// Upgrade --> release upgrade					
+					$command_upgrade = $command_prefix . " --not-running-from-cron upgrade -r " . file_get_contents("/tmp/release.upgrade") . " install" ;
+					cmd_exec($command_upgrade, $output);
+					break;
 			} // end of switch
 
 		} // end of for loop
 		
 	return $output;
 }
-
+function release_array($path) {
+	$path = rtrim($path, "/") . "/";
+    $folder_handle = opendir($path);
+    $exclude_array = array(".","..","ISO-IMAGES");
+    $result = array();
+    while(false !== ($filename = readdir($folder_handle))) {
+        if(!in_array($filename, $exclude_array)) {
+            if(is_dir($path . $filename . "/")) {
+                
+                $result[] = $filename;
+            }
+        }
+    }
+    return $result;
+}
 // Function name: 	thebrig_portsnap
 // Inputs: 			ports_dir		string containing the location we want the ports tree to be stored
 //					work_dir		string containing the location we want portsnap to use for temp downloads
