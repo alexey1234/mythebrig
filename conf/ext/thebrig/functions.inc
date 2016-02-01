@@ -16,7 +16,8 @@
    See the License for the specific language governing permissions and
    limitations under the License.
 */
-include_once( "ext/thebrig/lang.inc");
+include_once( "config.inc");
+include_once( $config['thebrig']['rootfolder']."conf/ext/thebrig/lang.inc");
 function thebrig_unregister() {
  	global $config;
  	
@@ -228,7 +229,6 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 		for ( $k ; $k < count ($dest_dir ); $k++ ){
 
 			$command_prefix = "/bin/sh " . $config['thebrig']['rootfolder'] . "conf/sbin/freebsd-update -d " . $work_dir[$k] . " -f " . $conf_file[$k] . " -b " . $dest_dir[$k];
-			
 			// The prep operation was successful
 
 			if ( !is_dir($work_dir[$k]) )
@@ -240,24 +240,25 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 					// Fetch only
 					$command_fetch= $command_prefix . " --not-running-from-cron fetch";
 					
-					cmd_exec($command_fetch, $output);
+					cmd_exec($command_fetch, $output, $errors);
 					
 					break;
 				case _THEBRIG_INSTALL_BUTTON:
 					// Update
 					$command_update= $command_prefix . " --not-running-from-cron install";
-					cmd_exec($command_update, $output);
+					cmd_exec($command_update, $output, $errors);
 					break;
 				case "Fetch & Install":
 					// Install --> fetch & extract
 					$command_fetch= $command_prefix . " --not-running-from-cron fetch install";
-					cmd_exec($command_fetch, $output);
+					cmd_exec($command_fetch, $output, $errors);
 					break;
 				case "Cron":
 					// Cron
 					$command_cron= $command_prefix . " cron";
 					mwexec($command_cron);
 					break;
+
 				case "Upgrade":
 					// Upgrade --> release upgrade					
 					$command_upgrade = $command_prefix . " --not-running-from-cron upgrade -r " . file_get_contents("/tmp/release.upgrade") . " install" ;
@@ -269,6 +270,7 @@ function thebrig_update ( $dest_dir , $work_dir , $conf_file , $action ) {
 		
 	return $output;
 }
+// fetch available releases
 function release_array($path) {
 	$path = rtrim($path, "/") . "/";
     $folder_handle = opendir($path);
@@ -738,14 +740,14 @@ function brig_datasets_list() {
 function write_defs_rules() {
 	global $config, $g;
 	
-	$file = "/etc/devfs.rules";
+	$file = $config['thebrig']['rootfolder']."/conf/devfs.rules";
 	$handle = fopen($file, "w");
 	fwrite($handle, "##Thebrig rulesets##");
 	$jails = $config['thebrig']['content'];
 	if (count($jails) > 0) {
 	array_sort_key($jails, "jailno");
 	foreach ($jails as $out_jail ) {
-		$ruleset_mumber = 4+$out_jail['jailno'];
+		$ruleset_mumber = 100+$out_jail['jailno'];
 		$ruleset_tag = "[devfsrules_jail_".$out_jail['jailname']."=".$ruleset_mumber."]";
 				fwrite($handle, "\n".$ruleset_tag."\n");
 				fwrite($handle, "add include \$devfsrules_hide_all\nadd include \$devfsrules_unhide_basic\nadd include \$devfsrules_unhide_login\n");
@@ -754,15 +756,8 @@ function write_defs_rules() {
 	 }
 	 fclose($handle);
 	 } else {
-	 unlink_if_exists("/etc/devfs.rules");
+	 unlink_if_exists($config['thebrig']['rootfolder']."/conf/devfs.rules");
 	 }
-if (isset($config['vbox']['enable'])) {
-$handle = fopen("/etc/devfs.rules", "a");
-fwrite($handle, "##Vbox rulesets##");
-fwrite($handle, "\n[vbox_tap=20]\n");
-fwrite($handle, "add path 'tap*' mode 0660 group vboxusers\n");
-fclose($handle);
-}
 }
 function write_jailcommands ($out_jail) {
 	global $config, $g;
@@ -992,7 +987,7 @@ function write_jailcommands ($out_jail) {
  		fwrite ($conf_handle, "\tpersist;\n");
  		fwrite ($conf_handle, "\thost.hostname =\"" . $out_jail['jailname'] .".". $config['system']['domain'] ."\";\n");
  		fwrite ($conf_handle, "\tenforce_statfs =" . $out_jail['statfs'] .";\n");
- 		fwrite ($conf_handle, "\tdevfs_ruleset=" . (4+ $out_jail['jailno']) .";\n");
+ 		fwrite ($conf_handle, "\tdevfs_ruleset=" . (100+ $out_jail['jailno']) .";\n");
  		fwrite ($conf_handle, "\tmount.fstab=\"".$config['thebrig']['rootfolder'] ."conf/jails/fstab." . $out_jail['jailname'] ."\";\n");
  		if (isset($out_jail['jail_vnet'] )) {  
 			fwrite ($conf_handle, "\tvnet;\n"); 

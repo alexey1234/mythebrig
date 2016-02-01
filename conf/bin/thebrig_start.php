@@ -50,6 +50,7 @@ unlink_if_exists("/etc/rc.d/thebrig");
 if ( ! symlink ( $config['thebrig']['rootfolder']."conf/bin/jail.sh", "/etc/rc.d/thebrig"))  
 	{ exec ("logger Failed copy rc script");} 
 chmod("/etc/rc.d/thebrig", 0755);
+
 /* Clean up operations
  * 
  * These steps serve two purposes:
@@ -111,6 +112,24 @@ if ( count ( $config['thebrig']['content'] ) > 0 ) {
 	write_jailconf ();
 	write_defs_rules ();
 }
+//BHYVE adds
+if ( ! symlink ( $config['thebrig']['rootfolder']."conf/rc.d/vm", "/usr/local/etc/rc.d/vm"))  
+	{ exec ("logger Failed copy rc script");} 
+chmod("/usr/local/etc/rc.d/vm", 0755);
+if ( ! symlink ( $config['thebrig']['rootfolder']."conf/bin/vm", "/usr/local/bin/vm"))  
+	{ exec ("logger Failed copy rc script");} 
+chmod("/usr/local/bin/vm", 0755);
+exec( "mkdir /usr/local/lib/vm-bhyve");
+$bhyve_lib = "{$config['thebrig']['rootfolder']}conf/lib";
+$lib_list = glob( "{$bhyve_lib}/*" );
+foreach ( $lib_list as $lib_file ) {
+	// Cut off the prefix to obtain the filename
+	$lib_file = str_replace( "{$bhyve_lib}/" , "", $lib_file);
+	// Link the real storage location to the webroot
+	exec ( "ln -s {$bhyve_lib}/{$lib_file} /usr/local/lib/vm-bhyve/{$lib_file}");
+}
+exec ("rconf service enable vm");
+exec ("rconf attribute set vm_dir " . $config['thebrig']['rootfolder']."work");
 // If thebrig service is enabled, then starting its rc script(s) need to 
 // be updated and run 
 if (isset ( $config['thebrig']['thebrig_enable']) ) {
